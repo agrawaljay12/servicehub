@@ -4,7 +4,6 @@
 fastapi>=0.110,<0.112
 starlette>=0.36,<0.38
 uvicorn[standard]>=0.27
-
 python-dotenv>=1.0
 
 # ===============================
@@ -19,12 +18,12 @@ pydantic-settings>=2.2
 sqlalchemy>=2.0.25
 alembic>=1.13.1
 
-# PostgreSQL (choose ONE)
+# PostgreSQL drivers (choose one if needed)
 psycopg2-binary>=2.9.9
 asyncpg>=0.29.0
 
 # ===============================
-# DATABASE (NOSQL – MongoDB)
+# DATABASE (NOSQL - MongoDB)
 # ===============================
 pymongo>=4.6.1
 motor>=3.5.1
@@ -33,12 +32,10 @@ motor>=3.5.1
 # AUTHENTICATION & SECURITY
 # ===============================
 python-jose[cryptography]>=3.3.0
-
-# ✔ Stable + recommended
 passlib[argon2]>=1.7.4
 argon2-cffi>=23.1.0
 
-# ❌ bcrypt kept OPTIONAL (avoid default usage)
+# bcrypt kept optional
 bcrypt>=4.1.2
 
 # ===============================

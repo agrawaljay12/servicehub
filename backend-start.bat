@@ -1,5 +1,2 @@
-:: Activate virtual environment
-call venv\Scripts\activate
+cd backend && venv\Scripts\activate && uvicorn app.main:app --reload
 
-:: Run FastAPI server
-uvicorn app.main:app --reload
