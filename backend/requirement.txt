@@ -1,0 +1,103 @@
+# ===============================
+# CORE FASTAPI STACK
+# ===============================
+fastapi>=0.110,<0.112
+starlette>=0.36,<0.38
+uvicorn[standard]>=0.27
+
+python-dotenv>=1.0
+
+# ===============================
+# DATA VALIDATION & SETTINGS
+# ===============================
+pydantic>=2.6,<3.0
+pydantic-settings>=2.2
+
+# ===============================
+# DATABASE (SQL)
+# ===============================
+sqlalchemy>=2.0.25
+alembic>=1.13.1
+
+# PostgreSQL (choose ONE)
+psycopg2-binary>=2.9.9
+asyncpg>=0.29.0
+
+# ===============================
+# DATABASE (NOSQL – MongoDB)
+# ===============================
+pymongo>=4.6.1
+motor>=3.5.1
+
+# ===============================
+# AUTHENTICATION & SECURITY
+# ===============================
+python-jose[cryptography]>=3.3.0
+
+# ✔ Stable + recommended
+passlib[argon2]>=1.7.4
+argon2-cffi>=23.1.0
+
+# ❌ bcrypt kept OPTIONAL (avoid default usage)
+bcrypt>=4.1.2
+
+# ===============================
+# FILE UPLOADS & FORMS
+# ===============================
+python-multipart>=0.0.20
+aiofiles>=23.2.1
+
+# ===============================
+# EMAIL SUPPORT
+# ===============================
+fastapi-mail>=1.4.1
+email-validator>=2.1.1
+
+# ===============================
+# CACHING & REDIS
+# ===============================
+redis>=5.0.2
+
+# ===============================
+# HTTP CLIENT
+# ===============================
+httpx>=0.27.0
+requests>=2.31.0
+
+# ===============================
+# REALTIME (WEBSOCKETS / SOCKET.IO)
+# ===============================
+websockets>=12.0
+python-socketio>=5.11.2
+
+# ===============================
+# BACKGROUND TASKS
+# ===============================
+celery>=5.3.6
+apscheduler>=3.10.4
+
+# ===============================
+# LOGGING & MONITORING
+# ===============================
+loguru>=0.7.2
+prometheus-client>=0.20.0
+
+# ===============================
+# JSON PERFORMANCE
+# ===============================
+orjson>=3.10.1
+
+# ===============================
+# TESTING
+# ===============================
+pytest>=8.2.0
+pytest-asyncio>=0.23.6
+pytest-cov>=4.1.0
+
+# ===============================
+# DEV TOOLS
+# ===============================
+black>=24.4.2
+isort>=5.13.2
+flake8>=7.1.0
+mypy>=1.10.0
