@@ -1,28 +1,28 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Home } from "./content/home";
+import { BrowserRouter, useLocation } from "react-router-dom";
 import { Navigation } from "./components/Navigation";
 import { Footer } from "./components/Footer";
 import { ThemeProvider } from "./context/ThemeContext";
-import { SignUp } from "./auth/SignUp";
-import { SignIn } from "./auth/SignIn";
-import { ForgotPassword } from "./auth/ForgotPassword";
+import { AuthLayout } from "./layouts/AuthLayout";
+import { MainLayout } from "./layouts/MainLayout";
+
+function AppContent() {
+  const location = useLocation();
+  const isAuthPage = location.pathname.startsWith("/auth");
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      {!isAuthPage && <Navigation />}
+      {isAuthPage ? <AuthLayout /> : <MainLayout />}
+      {!isAuthPage && <Footer />}
+    </div>
+  );
+}
 
 function App() {
   return (
     <ThemeProvider>
       <BrowserRouter>
-        <Navigation />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/auth/signup" element={<SignUp />} />
-          <Route path="/auth/signin" element={<SignIn />} />
-          <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-          {/* <Route path="/about" element={<About />} />
-          <Route path="/project" element={<Projects />} />
-          <Route path="/contact" element={<Contact/>} />
-          <Route path="/skills" element={<TechnicalSkills/>} /> */}
-        </Routes>
-        <Footer />
+        <AppContent />
       </BrowserRouter>
     </ThemeProvider>
   );

@@ -49,11 +49,11 @@ export function Home() {
       {/* Hero Section */}
       <section className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
         <div className="max-w-5xl mx-auto text-center space-y-8">
-          <h1 style={{ fontFamily: 'var(--font-outfit)', color: theme === 'dark' ? '#ffffff' : '#000000' }} className="text-6xl md:text-7xl lg:text-8xl font-black leading-tight">
+          <h1 style={{ fontFamily: 'var(--font-outfit)' }} className="text-6xl md:text-7xl lg:text-8xl font-black leading-tight">
             Find Trusted <br />
             <span style={{ color: '#0891b2' }}>Local Services</span>
           </h1>
-          <p style={{ fontFamily: 'var(--font-worksans)', color: theme === 'dark' ? '#cccccc' : '#000000', opacity: 0.7 }} className="text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed">
+          <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.7 }} className="text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed">
             Connect with verified professionals in your area. Quality services, fast responses, peace of mind.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
@@ -80,7 +80,7 @@ export function Home() {
         <div className="max-w-3xl mx-auto">
           <div className="space-y-8">
             <div className="text-center">
-              <h2 style={{ fontFamily: 'var(--font-outfit)', color: theme === 'dark' ? '#ffffff' : '#000000' }} className="text-3xl md:text-4xl font-bold">
+              <h2 style={{ fontFamily: 'var(--font-outfit)' }} className="text-3xl md:text-4xl font-bold">
                 What service do you need?
               </h2>
             </div>
@@ -119,10 +119,10 @@ export function Home() {
       <section id="services" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-20">
-            <h2 style={{ fontFamily: 'var(--font-outfit)', color: theme === 'dark' ? '#ffffff' : '#000000' }} className="text-4xl md:text-5xl font-bold mb-4">
+            <h2 style={{ fontFamily: 'var(--font-outfit)' }} className="text-4xl md:text-5xl font-bold mb-4">
               Popular Services
             </h2>
-            <p style={{ fontFamily: 'var(--font-worksans)', color: theme === 'dark' ? '#aaaaaa' : '#000000', opacity: 0.6 }} className="text-lg max-w-2xl mx-auto">
+            <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.6 }} className="text-lg max-w-2xl mx-auto">
               Browse our wide range of trusted local services
             </p>
           </div>
@@ -141,7 +141,7 @@ export function Home() {
                 <div className="text-4xl md:text-5xl mb-3 group-hover:scale-110 transition-transform duration-300">
                   {service.icon}
                 </div>
-                <h3 style={{ fontFamily: 'var(--font-outfit)', fontSize: '14px', color: theme === 'dark' ? '#ffffff' : '#000000' }} className="font-bold">
+                <h3 style={{ fontFamily: 'var(--font-outfit)', fontSize: '14px' }} className="font-bold">
                   {service.name}
                 </h3>
               </button>
@@ -157,7 +157,7 @@ export function Home() {
             <h2 style={{ fontFamily: 'var(--font-outfit)' }} className="text-4xl md:text-5xl font-bold mb-4">
               Why Smart Local?
             </h2>
-            <p style={{ fontFamily: 'var(--font-worksans)', color: theme === 'dark' ? '#aaaaaa' : '#000000', opacity: 0.6 }} className="text-lg">
+            <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.6 }} className="text-lg">
               Everything you need for quality local services
             </p>
           </div>
@@ -172,10 +172,10 @@ export function Home() {
               <div key={index} className="flex items-start gap-6 pb-6 border-b border-opacity-20" style={{ borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }}>
                 <div className="w-3 h-3 rounded-full mt-2" style={{ backgroundColor: '#0891b2', flexShrink: 0 }}></div>
                 <div>
-                  <h3 style={{ fontFamily: 'var(--font-outfit)', color: theme === 'dark' ? '#ffffff' : '#000000' }} className="text-xl font-bold mb-2">
+                  <h3 style={{ fontFamily: 'var(--font-outfit)' }} className="text-xl font-bold mb-2">
                     {item.title}
                   </h3>
-                  <p style={{ fontFamily: 'var(--font-worksans)', color: theme === 'dark' ? '#aaaaaa' : '#000000', opacity: 0.6 }} className="text-base leading-relaxed">
+                  <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.6 }} className="text-base leading-relaxed">
                     {item.text}
                   </p>
                 </div>
@@ -189,7 +189,7 @@ export function Home() {
       <section className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
-            <h2 style={{ fontFamily: 'var(--font-outfit)', color: theme === 'dark' ? '#ffffff' : '#000000' }} className="text-4xl md:text-5xl font-bold mb-4">
+            <h2 style={{ fontFamily: 'var(--font-outfit)' }} className="text-4xl md:text-5xl font-bold mb-4">
               Loved by Our Users
             </h2>
           </div>
@@ -202,14 +202,14 @@ export function Home() {
                     <FaStar key={i} style={{ color: '#fbbf24', fontSize: '14px' }} />
                   ))}
                 </div>
-                <p style={{ fontFamily: 'var(--font-worksans)', color: theme === 'dark' ? '#cccccc' : '#000000', opacity: 0.8 }} className="text-base mb-4 leading-relaxed italic">
+                <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.8 }} className="text-base mb-4 leading-relaxed italic">
                   "{testimonial.text}"
                 </p>
                 <div>
-                  <p style={{ fontFamily: 'var(--font-outfit)', color: theme === 'dark' ? '#ffffff' : '#000000' }} className="font-bold">
+                  <p style={{ fontFamily: 'var(--font-outfit)' }} className="font-bold">
                     {testimonial.name}
                   </p>
-                  <p style={{ opacity: 0.5, fontFamily: 'var(--font-worksans)', fontSize: '14px', color: theme === 'dark' ? '#999999' : '#000000' }}>
+                  <p style={{ opacity: 0.5, fontFamily: 'var(--font-worksans)', fontSize: '14px' }}>
                     {testimonial.role}
                   </p>
                 </div>
@@ -228,7 +228,7 @@ export function Home() {
                 <div style={{ fontFamily: 'var(--font-outfit)', color: '#0891b2' }} className="text-4xl md:text-5xl font-bold mb-2">
                   {stat.value}
                 </div>
-                <p style={{ fontFamily: 'var(--font-worksans)', color: theme === 'dark' ? '#aaaaaa' : '#000000', opacity: 0.6 }} className="text-sm md:text-base">
+                <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.6 }} className="text-sm md:text-base">
                   {stat.label}
                 </p>
               </div>
@@ -240,10 +240,10 @@ export function Home() {
       {/* CTA Section */}
       <section id="about" className="py-24 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: '#0891b2', color: '#ffffff' }}>
         <div className="max-w-3xl mx-auto text-center space-y-8">
-          <h2 style={{ fontFamily: 'var(--font-outfit)', color: '#ffffff' }} className="text-5xl md:text-6xl font-bold leading-tight">
+          <h2 style={{ fontFamily: 'var(--font-outfit)' }} className="text-5xl md:text-6xl font-bold leading-tight">
             Ready to Get Started?
           </h2>
-          <p style={{ fontFamily: 'var(--font-worksans)', color: '#ffffff', opacity: 0.9 }} className="text-lg md:text-xl leading-relaxed">
+          <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.9 }} className="text-lg md:text-xl leading-relaxed">
             Join thousands of satisfied customers who have found trusted service providers on Smart Local.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
