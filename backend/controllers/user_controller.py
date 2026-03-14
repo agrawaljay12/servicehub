@@ -7,12 +7,11 @@ from core.core import hash_password,verify_password,create_access_token
 from core import message
 from core import http_status
 from core import response
+from core import validation
 from datetime import datetime
 
-
+# define user collections
 user_collection = db["users"]
-
-
 
 # create a new user function
 async def create_user(request:Request):
@@ -30,33 +29,22 @@ async def create_user(request:Request):
 
         # --------------------------validations logic for fields ----------------------------
         # validation for all required fields
-        if not name or not email or not password:
-            raise HTTPException(
-                status_code=http_status.BAD_REQUEST,
-                detail = message.REQUIRED_FIELDS_MISSING
-            )
+        validation.validate_data_all_required_field(data)
         
         # validate name format
-        if not name.replace(" ","").isalpha():
-            raise HTTPException(
-                status_code=http_status.BAD_REQUEST,
-                detail=message.INVALID_NAME_FORMAT
-            )
+        validation.validate_name(name)
             
         # validate email format
-        if not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email):
-            raise HTTPException(
-                status_code=http_status.BAD_REQUEST,
-                detail=message.INVALID_EMAIL_FORMAT
-            )
-            
+        validation.validate_email(email)
+
         # validate password format
-        password_pattern = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])[A-Z][A-Za-z\d\W_]{7,15}$'
-        if not re.match(password_pattern, password):
-            raise HTTPException(
-                status_code=http_status.BAD_REQUEST,
-                detail=message.INVALID_PASSWORD_FORMAT
-            )
+        validation.validate_password(password)
+
+        # validate phone number format
+        validation.validate_phone(phone_no)
+
+        # validate address format
+        validation.validate_address(address)
             
 
         #  check the user if already exists with the same email then return error message.
@@ -192,10 +180,10 @@ async def forgot_password(request:Request):
                 detail=message.INVALID_EMAIL_FORMAT
             )   
 
-        if not password or not confirm_password:
+        if password != confirm_password:
             raise HTTPException(
                 status_code=http_status.BAD_REQUEST,
-                detail=message.REQUIRED_FIELDS_MISSING
+                detail=message.INVALID_PASSWORD
             )       
         
         user = user_collection.find_one({"email":email})

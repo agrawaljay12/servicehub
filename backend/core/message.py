@@ -10,6 +10,8 @@ INVALID_NAME_FORMAT = "Invalid name format"
 REQUIRED_FIELDS_MISSING = "Required fields are missing"
 INVALID_EMAIL_FORMAT = "Invalid email format"
 INVALID_PASSWORD_FORMAT = "Invalid password format"
+INVALID_PHONE_FORMAT = "Invalid phone number format"
+INVALID_ADDRESS_FORMAT = "Invalid address format"    
 
 # Auth messages
 UNAUTHORIZED = "Unauthorized access"
