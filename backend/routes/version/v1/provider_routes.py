@@ -1,0 +1,43 @@
+from controllers.provider_controller import create_provider
+from fastapi import APIRouter, Depends, UploadFile, File, Form,status
+from core.dependency import get_current_user
+from fastapi.responses import JSONResponse
+
+router = APIRouter()
+
+# URL: http://127.0.0.1:8000/api/v1/provider/
+# method: GET
+# description : WELCOME TO API HOME 
+
+@router.get('/',response_description="Welcome to the Provider Management API")
+async def home():
+    return JSONResponse(
+        status_code= status.HTTP_200_OK,
+        content={"message": "Welcome to the Provider Management API"}
+
+    )
+
+# URL: http://127.0.0.1:8000/api/v1/provider/create
+# method: POST
+# description : CREATE A NEW PROVIDER
+
+@router.post('/create',response_description="Create a new provider")
+async def create_provider_endpoint(
+    service_category_id: str = Form(...),
+    location: str = Form(...),
+    experience: str = Form(...),
+    price: str = Form(...),
+    description: str = Form(...),
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user) 
+):
+    return await create_provider(
+        service_category_id=service_category_id,
+        location=location,
+        experience=experience,
+        price=price,
+        description=description,
+        file=file,
+        current_user=current_user
+    )
+

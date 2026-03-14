@@ -1,21 +1,11 @@
 from typing import List
-from fastapi import UploadFile, File
+from fastapi import UploadFile
 import os
 import uuid
 
 upload_dir: str = "static/uploads"
 
 async def save_file(file: UploadFile, folder:str):
-    """
-    Save uploaded file to the specified directory and return its path.
-    
-    Args:
-        file (UploadFile): The file uploaded by the user.
-        upload_dir (str): Directory where the files will be saved. Defaults to "uploads".
-    
-    Returns:
-        List[str]: List of file paths where the uploaded files are saved.
-    """
     # Create the full upload directory path
     path = os.path.join(upload_dir, folder)
     

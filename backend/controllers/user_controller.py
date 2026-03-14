@@ -29,7 +29,7 @@ async def create_user(request:Request):
 
         # --------------------------validations logic for fields ----------------------------
         # validation for all required fields
-        validation.validate_data_all_required_field(data)
+        # validation.validate_data_all_required_field(data)
         
         # validate name format
         validation.validate_name(name)
@@ -43,8 +43,8 @@ async def create_user(request:Request):
         # validate phone number format
         validation.validate_phone(phone_no)
 
-        # validate address format
-        validation.validate_address(address)
+        # # validate address format
+        # validation.validate_address(address)
             
 
         #  check the user if already exists with the same email then return error message.
