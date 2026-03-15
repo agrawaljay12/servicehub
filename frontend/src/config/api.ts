@@ -12,6 +12,17 @@ const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
  */
 export const OTP_ENDPOINTS = {
   /**
+   * Home / Welcome
+   * GET /otp/
+   * 
+   * Response Success (200):
+   * {
+   *   message: "Welcome to the OTP Management API"
+   * }
+   */
+  home: `${API_BASE_URL}/otp/`,
+
+  /**
    * Generate OTP
    * POST /otp/generate
    * 
@@ -52,7 +63,7 @@ export const OTP_ENDPOINTS = {
    * - 400: Invalid OTP or OTP expired (10 minute expiration)
    * - 500: Server error
    * 
-   * Note: OTP is deleted after successful verification
+   * Note: OTP is automatically deleted after successful verification
    */
   verify: `${API_BASE_URL}/otp/verify`,
 };
@@ -64,6 +75,17 @@ export const OTP_ENDPOINTS = {
  */
 export const USER_ENDPOINTS = {
   /**
+   * Home / Welcome
+   * GET /users/
+   * 
+   * Response Success (200):
+   * {
+   *   message: "Welcome to the User Management API"
+   * }
+   */
+  home: `${API_BASE_URL}/users/`,
+
+  /**
    * Create User (Registration)
    * POST /users/create
    * 
@@ -71,7 +93,9 @@ export const USER_ENDPOINTS = {
    * {
    *   name: string (letters and spaces only),
    *   email: string (valid email format),
-   *   password: string (must match password requirements)
+   *   password: string (must match password requirements),
+   *   phone_no: string (format: +countrycode + 7-14 digits, e.g., +919876543210),
+   *   address: string (format: "street/building, city, state, country, postal_code")
    * }
    * 
    * Password Requirements:
@@ -82,6 +106,8 @@ export const USER_ENDPOINTS = {
    * - Must contain at least one special character (!@#$%^&* etc)
    * 
    * Example valid password: "Password123!"
+   * Example phone: "+919876543210"
+   * Example address: "123 Main St, New York, NY, USA, 100001"
    * 
    * Response Success (201):
    * {
@@ -96,7 +122,9 @@ export const USER_ENDPOINTS = {
    *   - "Invalid name format" (must be letters and spaces)
    *   - "Invalid email format"
    *   - "Invalid password format" (doesn't meet requirements)
-   *   - "User already exists"
+   *   - "Invalid phone number format" (must be +countrycode + 7-14 digits)
+   *   - "Invalid address format" (must match: street, city, state, country, postal_code)
+   *   - "User with this email already exists"
    * - 500: Server error
    */
   create: `${API_BASE_URL}/users/create`,
@@ -113,7 +141,7 @@ export const USER_ENDPOINTS = {
    * 
    * Response Success (200):
    * {
-   *   message: "Login successful",
+   *   message: "Login Successful",
    *   data: {
    *     access_token: string (JWT token),
    *     token_type: "bearer",
@@ -135,6 +163,38 @@ export const USER_ENDPOINTS = {
    * Note: Store access_token in localStorage for authenticated requests
    */
   login: `${API_BASE_URL}/users/login`,
+
+  /**
+   * Get All Users
+   * GET /users/fetch/all
+   * 
+   * Authentication: Required (Admin role)
+   * Header: Authorization: Bearer <access_token>
+   * 
+   * Response Success (200):
+   * {
+   *   message: "Users retrieved successfully",
+   *   data: [
+   *     {
+   *       _id: string,
+   *       name: string,
+   *       email: string,
+   *       phone_no: string,
+   *       address: string,
+   *       status: string,
+   *       role: string,
+   *       created_at: datetime
+   *     },
+   *     ...
+   *   ]
+   * }
+   * 
+   * Response Error:
+   * - 401: Unauthorized (token missing or invalid)
+   * - 403: Forbidden (insufficient permissions, requires admin role)
+   * - 500: Server error
+   */
+  fetchAll: `${API_BASE_URL}/users/fetch/all`,
 
   /**
    * Forgot Password (Reset Password)
@@ -174,14 +234,16 @@ export const USER_ENDPOINTS = {
  * =========================
  * 
  * SIGN UP FLOW:
- * 1. User fills: Name, Email, Password, Confirm Password
+ * 1. User fills: Name, Email, Password, Confirm Password, Phone Number, Address
  * 2. Frontend validates locally
- * 3. Call POST /users/create with { name, email, password }
- * 4. On success → Ask for OTP verification
- * 5. Call POST /otp/generate with { email }
- * 6. User enters 6-digit OTP
- * 7. Call POST /otp/verify with { email, otp }
- * 8. On success → Redirect to Sign In page
+ * 3. Call POST /users/create with { name, email, password, phone_no, address }
+ * 4. Phone format: +countrycode + 7-14 digits (e.g., +919876543210)
+ * 5. Address format: "street/building, city, state, country, postal_code"
+ * 6. On success → Ask for OTP verification
+ * 7. Call POST /otp/generate with { email }
+ * 8. User enters 6-digit OTP
+ * 9. Call POST /otp/verify with { email, otp }
+ * 10. On success → Redirect to Sign In page
  * 
  * SIGN IN FLOW:
  * 1. User fills: Email, Password
@@ -198,6 +260,11 @@ export const USER_ENDPOINTS = {
  * 5. User enters New Password and Confirm Password
  * 6. Call PUT /users/forgot-password with { email, password, confirm_password }
  * 7. On success → Redirect to Sign In page
+ * 
+ * GET ALL USERS (Admin only):
+ * 1. Requires admin role
+ * 2. Call GET /users/fetch/all with Authorization header
+ * 3. Header: Authorization: Bearer <access_token>
  */
 
 /**
@@ -217,6 +284,14 @@ export const VALIDATION = {
   // - Contains lowercase, uppercase, digit, and special character
   PASSWORD: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])[A-Z][A-Za-z\d\W_]{7,15}$/,
 
+  // Phone number pattern: +countrycode + 7-14 digits
+  // Example: +919876543210
+  PHONE: /^\+\d{1,3}\d{7,14}$/,
+
+  // Address pattern: street, city, state, country, postal_code
+  // Example: "123 Main St, New York, NY, USA, 100001"
+  ADDRESS: /^[A-Za-z0-9\/\-\,\s]+,\s[A-Za-z\s]+,\s[A-Za-z\s]+,\s[A-Za-z\s]+,\s\d{6}$/,
+
   // OTP: Exactly 6 digits
   OTP: /^\d{6}$/,
 };
@@ -227,18 +302,28 @@ export const VALIDATION = {
  * Backend error messages and their meanings
  */
 export const BACKEND_ERRORS = {
-  // OTP Errors
+  // User Errors
+  USER_CREATED_SUCCESS: "User created successfully",
+  USER_ALREADY_EXISTS: "User with this email already exists",
   USER_NOT_FOUND: "User not found",
+  INVALID_PASSWORD: "Invalid password",
+  LOGIN_SUCCESS: "Login Successful",
+  
+  // Validation Errors
+  REQUIRED_FIELDS_MISSING: "Required fields are missing",
+  INVALID_NAME_FORMAT: "Invalid name format",
+  INVALID_EMAIL_FORMAT: "Invalid email format",
+  INVALID_PASSWORD_FORMAT: "Invalid password format",
+  INVALID_PHONE_FORMAT: "Invalid phone number format",
+  INVALID_ADDRESS_FORMAT: "Invalid address format",
+
+  // Auth Errors
+  UNAUTHORIZED: "Unauthorized access",
+  TOKEN_EXPIRED: "Token has expired",
+
+  // OTP Errors
   INVALID_OTP: "Invalid OTP",
   OTP_EXPIRED: "OTP has expired",
-
-  // User Errors
-  REQUIRED_FIELDS_MISSING: "Required fields missing",
-  INVALID_NAME_FORMAT: "Invalid name format (letters and spaces only)",
-  INVALID_EMAIL_FORMAT: "Invalid email format",
-  INVALID_PASSWORD_FORMAT: "Password must: Start with uppercase, be 8-15 chars, contain lowercase, digit, and special character",
-  USER_ALREADY_EXISTS: "User already exists",
-  INVALID_PASSWORD: "Invalid password",
 };
 
 /**

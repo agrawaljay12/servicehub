@@ -7,17 +7,22 @@ import { USER_ENDPOINTS, OTP_ENDPOINTS, VALIDATION } from "../config/api";
 export function SignUp() {
   const { theme } = useTheme();
   const navigate = useNavigate();
-  const [step, setStep] = useState<'form' | 'otp'>('form');
+  const [step, setStep] = useState<'email' | 'otp' | 'form'>('email');
+  const [] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    phone_no: '',
+    address: ''
   });
   const [otp, setOtp] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
+
+  // Step 1: Email verification - send OTP to email
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -48,6 +53,20 @@ export function SignUp() {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
+    // Validate phone number
+    if (!formData.phone_no.trim()) {
+      newErrors.phone_no = 'Phone number is required';
+    } else if (!VALIDATION.PHONE.test(formData.phone_no.trim())) {
+      newErrors.phone_no = 'Phone must be in format: +countrycode + 7-14 digits (e.g., +919876543210)';
+    }
+
+    // Validate address
+    if (!formData.address.trim()) {
+      newErrors.address = 'Address is required';
+    } else if (!VALIDATION.ADDRESS.test(formData.address.trim())) {
+      newErrors.address = 'Address format: "street, city, state, country, postal_code" (e.g., "123 Main St, New York, NY, USA, 100001")';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -69,14 +88,18 @@ export function SignUp() {
         body: JSON.stringify({
           name: formData.name.trim(),
           email: formData.email.trim(),
-          password: formData.password
+          password: formData.password,
+          phone_no: formData.phone_no.trim(),
+          address: formData.address.trim()
         })
       });
 
       const createData = await createResponse.json();
 
       if (!createResponse.ok) {
-        setServerError(createData.detail || 'Failed to create account');
+        // Log the full response for debugging
+        console.error('Backend error response:', createData);
+        setServerError(createData.detail || JSON.stringify(createData) || 'Failed to create account');
         setLoading(false);
         return;
       }
@@ -271,6 +294,44 @@ export function SignUp() {
                   className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
                 />
                 {errors.email && <p style={errorStyle} className="mt-2 text-sm">{errors.email}</p>}
+              </div>
+
+              {/* Phone Number Field */}
+              <div>
+                <label style={labelStyle} className="block text-sm font-semibold mb-2">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={formData.phone_no}
+                  onChange={(e) => {
+                    setFormData({ ...formData, phone_no: e.target.value });
+                    if (errors.phone_no) setErrors({ ...errors, phone_no: '' });
+                  }}
+                  placeholder="+919876543210"
+                  style={inputStyle}
+                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
+                />
+                {errors.phone_no && <p style={errorStyle} className="mt-2 text-sm">{errors.phone_no}</p>}
+              </div>
+
+              {/* Address Field */}
+              <div>
+                <label style={labelStyle} className="block text-sm font-semibold mb-2">
+                  Address
+                </label>
+                <input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => {
+                    setFormData({ ...formData, address: e.target.value });
+                    if (errors.address) setErrors({ ...errors, address: '' });
+                  }}
+                  placeholder="123 Main St, New York, NY, USA, 100001"
+                  style={inputStyle}
+                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
+                />
+                {errors.address && <p style={errorStyle} className="mt-2 text-sm">{errors.address}</p>}
               </div>
 
               {/* Password Field */}

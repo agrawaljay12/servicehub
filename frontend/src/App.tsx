@@ -8,12 +8,14 @@ import { MainLayout } from "./layouts/MainLayout";
 function AppContent() {
   const location = useLocation();
   const isAuthPage = location.pathname.startsWith("/auth");
+  const isAdminPage = location.pathname.startsWith("/admin");
+  const isProviderPage = location.pathname.startsWith("/provider");
 
   return (
     <div className="flex flex-col min-h-screen">
-      {!isAuthPage && <Navigation />}
+      {!isAuthPage && !isAdminPage && !isProviderPage && <Navigation />}
       {isAuthPage ? <AuthLayout /> : <MainLayout />}
-      {!isAuthPage && <Footer />}
+      {!isAuthPage && !isAdminPage && !isProviderPage && <Footer />}
     </div>
   );
 }

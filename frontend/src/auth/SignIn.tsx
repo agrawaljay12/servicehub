@@ -3,6 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useTheme } from "../context/ThemeContext";
 import { USER_ENDPOINTS, VALIDATION } from "../config/api";
+import { getAuthHeader } from "../utils/authHelper";
+
+const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
 export function SignIn() {
   const { theme } = useTheme();
@@ -61,18 +64,30 @@ export function SignIn() {
         return;
       }
 
-      // Success - Store token and user data
-      const { access_token, user } = data.data || data;
-      
-      localStorage.setItem('access_token', access_token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      if (rememberMe) {
-        localStorage.setItem('rememberMe', 'true');
-      }
+      // Success - Store token and user data with session info
+      if (data.data) {
+        const { access_token, user } = data.data;
+        
+        // Store token
+        localStorage.setItem('access_token', access_token);
+        
+        // Store user info
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        // Store session timestamp for timeout tracking
+        localStorage.setItem('sessionStart', new Date().getTime().toString());
+        localStorage.setItem('sessionTimeout', SESSION_TIMEOUT.toString());
+        
+        if (rememberMe) {
+          localStorage.setItem('rememberMe', 'true');
+        }
 
-      // Redirect to home
-      navigate('/');
+        // Redirect to home after short delay
+        setTimeout(() => {
+          navigate('/');
+          window.location.reload(); // Reload to trigger Navigation re-check
+        }, 500);
+      }
     } catch (error) {
       setServerError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
@@ -209,7 +224,7 @@ export function SignIn() {
               type="submit"
               disabled={loading}
               style={{ fontFamily: 'var(--font-worksans)' }}
-              className="w-full bg-gradient-to-r from-[#0891b2] to-[#06b6d4] text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 mt-6"
+              className="w-full bg-linear-to-r from-[#0891b2] to-[#06b6d4] text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 mt-6"
             >
               {loading ? 'Signing In...' : 'Sign In'}
             </button>

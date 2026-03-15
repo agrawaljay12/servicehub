@@ -14,7 +14,7 @@ def validate_data_all_required_field(data:dict):
 
     # --------------------------validations logic for fields ----------------------------
     # validation for all required fields
-    if not name or not email or not password or phone_no or address:
+    if not name or not email or not password or not phone_no or not address:
         raise HTTPException(
             status_code=http_status.BAD_REQUEST,
             detail = message.REQUIRED_FIELDS_MISSING

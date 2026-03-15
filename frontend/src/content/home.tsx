@@ -1,22 +1,192 @@
-import { FaArrowRight, FaStar } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { useState, useMemo, memo, useEffect } from "react";
+import { FaArrowRight, FaStar, FaSpinner } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
+import { CATEGORY_ENDPOINTS } from "../config/category";
+import { getAuthHeader } from "../utils/authHelper";
+
+// Constants
+const PRIMARY_COLOR = '#0891b2';
+const DARK_BG = '#000000';
+const LIGHT_BG = '#ffffff';
+const DARK_SECTION = '#0a0a0a';
+const LIGHT_SECTION = '#f9f9f9';
+const DARK_CARD = '#111111';
+const LIGHT_CARD = '#f5f5f5';
+
+// Utility function to get theme colors
+const getThemeColors = (theme: string) => ({
+  bg: theme === 'dark' ? DARK_BG : LIGHT_BG,
+  text: theme === 'dark' ? LIGHT_BG : DARK_BG,
+  card: theme === 'dark' ? DARK_CARD : LIGHT_CARD,
+  section: theme === 'dark' ? DARK_SECTION : LIGHT_SECTION,
+  border: theme === 'dark' ? 'rgba(8, 145, 178, 0.15)' : 'rgba(8, 145, 178, 0.2)',
+  borderLight: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+  hover: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+});
+
+// Service Item Component
+const ServiceItem = memo(({ service, theme, onServiceClick }: { service: { name: string; icon: string; description: string }; theme: string; onServiceClick: (serviceName: string) => void }) => {
+  const colors = getThemeColors(theme);
+  
+  return (
+    <button
+      onClick={() => onServiceClick(service.name)}
+      className="group p-6 md:p-8 text-center rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300 hover:-translate-y-2 cursor-pointer"
+      style={{
+        backgroundColor: colors.card,
+        borderColor: colors.border,
+        borderWidth: '1px',
+      }}
+      aria-label={`${service.name} service - ${service.description}`}
+    >
+      <div className="text-5xl md:text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">
+        {service.icon}
+      </div>
+      <h3 style={{ fontFamily: 'var(--font-outfit)' }} className="text-xl font-bold mb-2">
+        {service.name}
+      </h3>
+      <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.6 }} className="text-sm leading-relaxed">
+        {service.description}
+      </p>
+    </button>
+  );
+});
+
+// Stat Item Component
+const StatItem = memo(({ stat }: { stat: { label: string; value: string } }) => (
+  <div>
+    <div style={{ fontFamily: 'var(--font-outfit)', color: PRIMARY_COLOR }} className="text-4xl md:text-5xl font-bold mb-2">
+      {stat.value}
+    </div>
+    <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.6 }} className="text-sm md:text-base">
+      {stat.label}
+    </p>
+  </div>
+));
+
+// Why Choose Item Component - Enhanced with better visuals
+const WhyChooseItem = memo(({ item, theme }: { item: { title: string; text: string; icon: string }; theme: string }) => {
+  const colors = getThemeColors(theme);
+  
+  return (
+    <div className="flex flex-col items-center text-center p-8 rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1" style={{ backgroundColor: colors.card, border: `1px solid ${colors.border}` }}>
+      <div className="text-5xl mb-4">
+        {item.icon}
+      </div>
+      <h3 style={{ fontFamily: 'var(--font-outfit)' }} className="text-2xl font-bold mb-3">
+        {item.title}
+      </h3>
+      <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.6 }} className="text-base leading-relaxed">
+        {item.text}
+      </p>
+    </div>
+  );
+});
 
 export function Home() {
   const { theme } = useTheme();
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [locationTerm, setLocationTerm] = useState('');
+  const [services, setServices] = useState<Array<{ name: string; icon: string; description: string }>>([]);
+  const [loadingServices, setLoadingServices] = useState(true);
+  const colors = useMemo(() => getThemeColors(theme), [theme]);
 
-  const services = [
-    { name: "Plumbing", icon: "🔧" },
-    { name: "Electrical", icon: "⚡" },
-    { name: "Cleaning", icon: "🧹" },
-    { name: "Carpentry", icon: "🪛" },
-    { name: "Painting", icon: "🎨" },
-    { name: "HVAC", icon: "❄️" },
-    { name: "Landscaping", icon: "🌿" },
-    { name: "Moving", icon: "🚚" },
+  // Fetch services from backend
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+    try {
+      setLoadingServices(true);
+      const response = await fetch(CATEGORY_ENDPOINTS.fetchAll, {
+        method: 'GET',
+        headers: getAuthHeader()
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && Array.isArray(data.data)) {
+        // Transform backend data to match component needs
+        const transformedServices = data.data.map((service: any) => ({
+          name: service.service_name || 'Service',
+          icon: getServiceIcon(service.service_name),
+          description: getServiceDescription(service.service_name)
+        }));
+        setServices(transformedServices);
+      } else {
+        // Fallback to default services if fetch fails
+        setServices(getDefaultServices());
+      }
+    } catch (err) {
+      console.error('Error fetching services:', err);
+      // Fallback to default services
+      setServices(getDefaultServices());
+    } finally {
+      setLoadingServices(false);
+    }
+  };
+
+  // Helper function to get default services
+  const getDefaultServices = () => [
+    { name: "Plumbing", icon: "🔧", description: "Leaks, repairs, installations" },
+    { name: "Electrical", icon: "⚡", description: "Wiring, repairs, upgrades" },
+    { name: "Cleaning", icon: "🧹", description: "Home & office cleaning" },
+    { name: "Carpentry", icon: "🪛", description: "Furniture, repairs, building" },
+    { name: "Painting", icon: "🎨", description: "Interior & exterior painting" },
+    { name: "HVAC", icon: "❄️", description: "Heating, cooling, maintenance" },
+    { name: "Landscaping", icon: "🌿", description: "Lawn care, landscaping" },
+    { name: "Moving", icon: "🚚", description: "Local & long distance moves" },
   ];
 
-  const testimonials = [
+  // Helper function to get icon for service
+  const getServiceIcon = (serviceName: string): string => {
+    const iconMap: Record<string, string> = {
+      plumbing: "🔧",
+      electrical: "⚡",
+      cleaning: "🧹",
+      carpentry: "🪛",
+      painting: "🎨",
+      hvac: "❄️",
+      landscaping: "🌿",
+      moving: "🚚",
+    };
+    return iconMap[serviceName.toLowerCase()] || "🏠";
+  };
+
+  // Helper function to get description for service
+  const getServiceDescription = (serviceName: string): string => {
+    const descriptionMap: Record<string, string> = {
+      plumbing: "Leaks, repairs, installations",
+      electrical: "Wiring, repairs, upgrades",
+      cleaning: "Home & office cleaning",
+      carpentry: "Furniture, repairs, building",
+      painting: "Interior & exterior painting",
+      hvac: "Heating, cooling, maintenance",
+      landscaping: "Lawn care, landscaping",
+      moving: "Local & long distance moves",
+    };
+    return descriptionMap[serviceName.toLowerCase()] || "Professional services";
+  };
+
+  const handleServiceClick = (serviceName: string) => {
+    // Navigate to category listing with service as query param
+    navigate(`/user/services?category=${encodeURIComponent(serviceName)}`);
+  };
+
+  const handleSearch = () => {
+    if (searchTerm.trim() || locationTerm.trim()) {
+      // Navigate to services page with search params
+      const params = new URLSearchParams();
+      if (searchTerm.trim()) params.append('service', searchTerm.trim());
+      if (locationTerm.trim()) params.append('location', locationTerm.trim());
+      navigate(`/user/services?${params.toString()}`);
+    }
+  };
+
+  const testimonials = useMemo(() => [
     {
       name: "Sarah Johnson",
       role: "Homeowner",
@@ -35,151 +205,214 @@ export function Home() {
       text: "Professional, reliable, and trustworthy. Best experience ever!",
       rating: 5,
     },
-  ];
+  ], []);
 
-  const stats = [
+  const stats = useMemo(() => [
     { label: "Services Completed", value: "10K+" },
     { label: "Happy Customers", value: "5K+" },
     { label: "Verified Professionals", value: "1K+" },
     { label: "Average Rating", value: "4.9★" },
-  ];
+  ], []);
+
+  const whyChooseItems = useMemo(() => [
+    { title: "Easy Search", text: "Find local services quickly and easily with our intuitive search functionality. Browse by category or location.", icon: "🔍" },
+    { title: "Verified Professionals", text: "All service providers are thoroughly vetted and verified by our community. Trust badges and reviews included.", icon: "✓" },
+    { title: "Fast Responses", text: "Get quick quotes and immediate responses from professionals ready to help in your area today.", icon: "⚡" },
+    { title: "Secure & Safe", text: "Your information is protected with industry-leading security standards. Transparent pricing, no hidden fees.", icon: "🔒" },
+  ], []);
 
   return (
-    <div style={{ backgroundColor: theme === 'dark' ? '#000000' : '#ffffff', color: theme === 'dark' ? '#ffffff' : '#000000' }}>
+    <div style={{ backgroundColor: colors.bg, color: colors.text }} className="scroll-smooth">
       {/* Hero Section */}
-      <section className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 relative">
-        <div className="max-w-5xl mx-auto text-center space-y-8">
-          <h1 style={{ fontFamily: 'var(--font-outfit)' }} className="text-6xl md:text-7xl lg:text-8xl font-black leading-tight">
-            Find Trusted <br />
-            <span style={{ color: '#0891b2' }}>Local Services</span>
-          </h1>
-          <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.7 }} className="text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed">
-            Connect with verified professionals in your area. Quality services, fast responses, peace of mind.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-            <Link
-              to="#services"
-              style={{ fontFamily: 'var(--font-outfit)', backgroundColor: '#0891b2', color: '#ffffff' }}
-              className="px-10 py-4 font-bold rounded-lg hover:opacity-80 transition-opacity duration-300 inline-flex items-center justify-center gap-2"
+      <section className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden pt-20">
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, ' + PRIMARY_COLOR + ', transparent 50%)', pointerEvents: 'none' }}></div>
+        <div className="max-w-6xl mx-auto text-center space-y-10 relative z-10">
+          <div className="space-y-6">
+            <h1 
+              style={{ fontFamily: 'var(--font-outfit)' }} 
+              className="text-5xl md:text-7xl lg:text-8xl font-black leading-tight animate-fade-in"
+            >
+              Find Trusted <br />
+              <span style={{ color: PRIMARY_COLOR }} className="inline-block mt-3">Local Services</span>
+            </h1>
+            <p 
+              style={{ fontFamily: 'var(--font-worksans)', opacity: 0.7 }} 
+              className="text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed animate-fade-in-delay"
+            >
+              Connect with verified professionals in your area. Get quality service, fast responses, and complete peace of mind. No hidden fees. No surprises.
+            </p>
+          </div>
+
+          {/* Trust Indicators */}
+          <div className="flex flex-col sm:flex-row gap-6 justify-center pt-4 animate-fade-in-delay animate-fade-in-delay-2">
+            <div className="flex items-center gap-2" style={{ fontFamily: 'var(--font-worksans)', opacity: 0.7 }}>
+              <span style={{ color: PRIMARY_COLOR }} className="font-bold">✓</span> 10K+ Services Completed
+            </div>
+            <div className="flex items-center gap-2" style={{ fontFamily: 'var(--font-worksans)', opacity: 0.7 }}>
+              <span style={{ color: PRIMARY_COLOR }} className="font-bold">✓</span> Verified Professionals
+            </div>
+            <div className="flex items-center gap-2" style={{ fontFamily: 'var(--font-worksans)', opacity: 0.7 }}>
+              <span style={{ color: PRIMARY_COLOR }} className="font-bold">✓</span> 4.9★ Avg Rating
+            </div>
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8 animate-fade-in-delay-2">
+            <a
+              href="/category"
+              style={{ fontFamily: 'var(--font-outfit)', backgroundColor: PRIMARY_COLOR, color: LIGHT_BG }}
+              className="px-12 py-4 font-bold text-lg rounded-lg hover:opacity-85 transition-all duration-300 inline-flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2"
+              role="button"
+              tabIndex={0}
             >
               Explore Services <FaArrowRight size={16} />
-            </Link>
-            <Link
-              to="#about"
-              style={{ fontFamily: 'var(--font-outfit)', borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.3)' : '#0891b2', color: theme === 'dark' ? '#ffffff' : '#0891b2', borderWidth: '2px' }}
-              className="px-10 py-4 font-bold rounded-lg hover:bg-opacity-10 transition-all duration-300"
+            </a>
+            <a
+              href="#about"
+              style={{ fontFamily: 'var(--font-outfit)', borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.3)' : PRIMARY_COLOR, color: theme === 'dark' ? LIGHT_BG : PRIMARY_COLOR, borderWidth: '2px' }}
+              className="px-12 py-4 font-bold text-lg rounded-lg hover:bg-opacity-10 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2"
+              role="button"
+              tabIndex={0}
             >
               Learn More
-            </Link>
+            </a>
           </div>
         </div>
       </section>
 
       {/* Search Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
-          <div className="space-y-8">
-            <div className="text-center">
-              <h2 style={{ fontFamily: 'var(--font-outfit)' }} className="text-3xl md:text-4xl font-bold">
-                What service do you need?
+      <section className="py-24 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: colors.section }}>
+        <div className="max-w-4xl mx-auto">
+          <div className="space-y-12">
+            <div className="text-center space-y-4">
+              <h2 style={{ fontFamily: 'var(--font-outfit)' }} className="text-4xl md:text-5xl font-bold">
+                Find Your Service
               </h2>
+              <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.6 }} className="text-lg max-w-2xl mx-auto">
+                Search for the service you need and connect with trusted professionals near you
+              </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="text"
-                placeholder="Search services..."
-                style={{
-                  fontFamily: 'var(--font-worksans)',
-                  backgroundColor: theme === 'dark' ? '#111111' : '#f5f5f5',
-                  color: theme === 'dark' ? '#ffffff' : '#000000',
-                  borderColor: '#0891b2'
-                }}
-                className="flex-1 px-6 py-3 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
-              <input
-                type="text"
-                placeholder="Your location..."
-                style={{
-                  fontFamily: 'var(--font-worksans)',
-                  backgroundColor: theme === 'dark' ? '#111111' : '#f5f5f5',
-                  color: theme === 'dark' ? '#ffffff' : '#000000',
-                  borderColor: '#0891b2'
-                }}
-                className="flex-1 px-6 py-3 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
-              <button style={{ backgroundColor: '#0891b2', color: '#ffffff', fontFamily: 'var(--font-outfit)' }} className="px-8 py-3 font-bold rounded-lg hover:opacity-80 transition-opacity duration-300 whitespace-nowrap">
-                Search
-              </button>
-            </div>
+            <form 
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSearch();
+              }}
+            >
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <label htmlFor="service-search" style={{ fontFamily: 'var(--font-worksans)', opacity: 0.8 }} className="block text-sm font-semibold mb-2">
+                    Service Type
+                  </label>
+                  <input
+                    id="service-search"
+                    type="text"
+                    placeholder="Plumbing, Electrical, Cleaning..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{
+                      fontFamily: 'var(--font-worksans)',
+                      backgroundColor: colors.card,
+                      color: colors.text,
+                      borderColor: PRIMARY_COLOR
+                    }}
+                    className="w-full px-6 py-4 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label htmlFor="location-search" style={{ fontFamily: 'var(--font-worksans)', opacity: 0.8 }} className="block text-sm font-semibold mb-2">
+                    Location
+                  </label>
+                  <input
+                    id="location-search"
+                    type="text"
+                    placeholder="City or Zip Code"
+                    value={locationTerm}
+                    onChange={(e) => setLocationTerm(e.target.value)}
+                    style={{
+                      fontFamily: 'var(--font-worksans)',
+                      backgroundColor: colors.card,
+                      color: colors.text,
+                      borderColor: PRIMARY_COLOR
+                    }}
+                    className="w-full px-6 py-4 rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-300"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-center pt-4">
+                <button 
+                  type="submit"
+                  style={{ backgroundColor: PRIMARY_COLOR, color: LIGHT_BG, fontFamily: 'var(--font-outfit)' }} 
+                  className="px-12 py-4 font-bold text-lg rounded-lg hover:opacity-75 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 w-full md:w-auto"
+                >
+                  Search Services
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </section>
 
       {/* Services Grid */}
       <section id="services" className="py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-20">
-            <h2 style={{ fontFamily: 'var(--font-outfit)' }} className="text-4xl md:text-5xl font-bold mb-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-24">
+            <h2 style={{ fontFamily: 'var(--font-outfit)' }} className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
               Popular Services
             </h2>
-            <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.6 }} className="text-lg max-w-2xl mx-auto">
-              Browse our wide range of trusted local services
+            <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.6 }} className="text-lg max-w-3xl mx-auto leading-relaxed">
+              Choose from a wide range of trusted local services. Each professional is verified and rated by our community.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-            {services.map((service, index) => (
-              <button
-                key={index}
-                className="group p-6 md:p-8 text-center hover:scale-105 transition-transform duration-300 rounded-xl"
-                style={{
-                  backgroundColor: theme === 'dark' ? '#111111' : '#f9f9f9',
-                  borderColor: theme === 'dark' ? 'rgba(8, 145, 178, 0.2)' : 'rgba(8, 145, 178, 0.1)',
-                  borderWidth: '1px'
-                }}
-              >
-                <div className="text-4xl md:text-5xl mb-3 group-hover:scale-110 transition-transform duration-300">
-                  {service.icon}
-                </div>
-                <h3 style={{ fontFamily: 'var(--font-outfit)', fontSize: '14px' }} className="font-bold">
-                  {service.name}
-                </h3>
-              </button>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {loadingServices ? (
+              <div className="col-span-full flex justify-center items-center py-12">
+                <FaSpinner className="animate-spin text-3xl" style={{ color: PRIMARY_COLOR }} />
+              </div>
+            ) : services.length > 0 ? (
+              services.map((service, index) => (
+                <ServiceItem 
+                  key={`${service.name}-${index}`} 
+                  service={service} 
+                  theme={theme} 
+                  onServiceClick={handleServiceClick} 
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12" style={{ color: colors.text }}>
+                <p style={{ fontFamily: 'var(--font-worksans)' }}>No services available</p>
+              </div>
+            )}
+          </div>
+
+          <div className="text-center mt-16">
+            <Link
+              to="/user/services"
+              style={{ fontFamily: 'var(--font-outfit)', color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR, borderWidth: '2px' }}
+              className="inline-block px-8 py-3 font-bold rounded-lg hover:bg-opacity-10 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2"
+            >
+              View All Services
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Why Choose Us Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: theme === 'dark' ? '#0a0a0a' : '#f9f9f9' }}>
-        <div className="max-w-5xl mx-auto">
+      <section className="py-24 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: colors.section }}>
+        <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
             <h2 style={{ fontFamily: 'var(--font-outfit)' }} className="text-4xl md:text-5xl font-bold mb-4">
-              Why Smart Local?
+              Why Choose Smart Local?
             </h2>
-            <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.6 }} className="text-lg">
-              Everything you need for quality local services
+            <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.6 }} className="text-lg max-w-2xl mx-auto">
+              We've made it simple to find quality service. Here's what makes us different.
             </p>
           </div>
 
-          <div className="space-y-6 md:space-y-8">
-            {[
-              { title: "Easy Search", text: "Find local services quickly and easily with our intuitive search functionality." },
-              { title: "Verified Professionals", text: "All service providers are thoroughly verified and trusted by our community." },
-              { title: "Fast Service", text: "Get quick responses from professionals ready to help in your area." },
-              { title: "Secure & Safe", text: "Your information is protected with industry-leading security standards." },
-            ].map((item, index) => (
-              <div key={index} className="flex items-start gap-6 pb-6 border-b border-opacity-20" style={{ borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }}>
-                <div className="w-3 h-3 rounded-full mt-2" style={{ backgroundColor: '#0891b2', flexShrink: 0 }}></div>
-                <div>
-                  <h3 style={{ fontFamily: 'var(--font-outfit)' }} className="text-xl font-bold mb-2">
-                    {item.title}
-                  </h3>
-                  <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.6 }} className="text-base leading-relaxed">
-                    {item.text}
-                  </p>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {whyChooseItems.map((item, index) => (
+              <WhyChooseItem key={`${item.title}-${index}`} item={item} theme={theme} />
             ))}
           </div>
         </div>
@@ -187,29 +420,40 @@ export function Home() {
 
       {/* Testimonials */}
       <section className="py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-20">
             <h2 style={{ fontFamily: 'var(--font-outfit)' }} className="text-4xl md:text-5xl font-bold mb-4">
               Loved by Our Users
             </h2>
+            <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.6 }} className="text-lg max-w-2xl mx-auto">
+              Join thousands of satisfied customers and service providers
+            </p>
           </div>
 
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="p-8 rounded-xl" style={{ backgroundColor: theme === 'dark' ? '#111111' : '#f9f9f9', borderLeftColor: '#0891b2', borderLeftWidth: '4px' }}>
-                <div className="flex items-center mb-4 gap-1">
+              <div
+                key={`${testimonial.name}-${index}`}
+                className="p-8 rounded-xl transition-all duration-300 hover:shadow-xl hover:-translate-y-2"
+                style={{
+                  backgroundColor: colors.card,
+                  borderColor: 'rgba(8, 145, 178, 0.2)',
+                  borderWidth: '2px'
+                }}
+              >
+                <div className="flex items-center mb-6 gap-1" aria-label={`${testimonial.rating} out of 5 stars`}>
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <FaStar key={i} style={{ color: '#fbbf24', fontSize: '14px' }} />
+                    <FaStar key={i} style={{ color: '#fbbf24', fontSize: '16px' }} aria-hidden="true" />
                   ))}
                 </div>
-                <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.8 }} className="text-base mb-4 leading-relaxed italic">
+                <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.85 }} className="text-base mb-6 leading-relaxed italic">
                   "{testimonial.text}"
                 </p>
-                <div>
-                  <p style={{ fontFamily: 'var(--font-outfit)' }} className="font-bold">
+                <div className="border-t" style={{ borderColor: colors.borderLight, paddingTop: '1rem' }}>
+                  <p style={{ fontFamily: 'var(--font-outfit)' }} className="font-bold text-sm">
                     {testimonial.name}
                   </p>
-                  <p style={{ opacity: 0.5, fontFamily: 'var(--font-worksans)', fontSize: '14px' }}>
+                  <p style={{ opacity: 0.5, fontFamily: 'var(--font-worksans)', fontSize: '13px' }} className="mt-1">
                     {testimonial.role}
                   </p>
                 </div>
@@ -220,49 +464,55 @@ export function Home() {
       </section>
 
       {/* Stats */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: theme === 'dark' ? '#0a0a0a' : '#f9f9f9' }}>
+      <section className="py-20 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: colors.section }}>
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {stats.map((stat, index) => (
-              <div key={index}>
-                <div style={{ fontFamily: 'var(--font-outfit)', color: '#0891b2' }} className="text-4xl md:text-5xl font-bold mb-2">
-                  {stat.value}
-                </div>
-                <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.6 }} className="text-sm md:text-base">
-                  {stat.label}
-                </p>
-              </div>
+              <StatItem key={`${stat.label}-${index}`} stat={stat} />
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section id="about" className="py-24 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: '#0891b2', color: '#ffffff' }}>
-        <div className="max-w-3xl mx-auto text-center space-y-8">
-          <h2 style={{ fontFamily: 'var(--font-outfit)' }} className="text-5xl md:text-6xl font-bold leading-tight">
-            Ready to Get Started?
-          </h2>
-          <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.9 }} className="text-lg md:text-xl leading-relaxed">
-            Join thousands of satisfied customers who have found trusted service providers on Smart Local.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <button style={{ fontFamily: 'var(--font-outfit)', backgroundColor: '#ffffff', color: '#0891b2' }} className="px-10 py-4 font-bold rounded-lg hover:opacity-90 transition-opacity duration-300">
-              Get Started
-            </button>
-            <button
+      <section id="about" className="py-32 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{ backgroundColor: PRIMARY_COLOR, color: LIGHT_BG }}>
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.5), transparent 50%)', pointerEvents: 'none' }}></div>
+        <div className="max-w-4xl mx-auto text-center space-y-10 relative z-10">
+          <div className="space-y-6">
+            <h2 style={{ fontFamily: 'var(--font-outfit)' }} className="text-5xl md:text-6xl lg:text-7xl font-black leading-tight">
+              Ready to Find Your Perfect Service?
+            </h2>
+            <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.95 }} className="text-xl md:text-2xl leading-relaxed">
+              Join thousands of satisfied customers who have found trusted professionals through Smart Local. Get started today with zero commitment.
+            </p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
+            <Link 
+              to="/auth/signup"
+              style={{ fontFamily: 'var(--font-outfit)', backgroundColor: LIGHT_BG, color: PRIMARY_COLOR }} 
+              className="px-14 py-5 font-bold text-lg rounded-lg hover:opacity-90 transition-all duration-300 inline-block shadow-xl hover:shadow-2xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2"
+            >
+              Sign Up Free
+            </Link>
+            <Link
+              to="/"
               style={{
                 fontFamily: 'var(--font-outfit)',
-                borderColor: '#ffffff',
+                borderColor: LIGHT_BG,
                 borderWidth: '2px',
-                color: '#ffffff',
+                color: LIGHT_BG,
                 backgroundColor: 'transparent'
               }}
-              className="px-10 py-4 font-bold rounded-lg hover:bg-white hover:bg-opacity-20 transition-all duration-300"
+              className="px-14 py-5 font-bold text-lg rounded-lg hover:bg-white/20 transition-all duration-300 inline-block focus:outline-none focus:ring-2 focus:ring-offset-2"
             >
-              Learn More
-            </button>
+              See How It Works
+            </Link>
           </div>
+
+          <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.8, marginTop: '1rem' }} className="text-sm">
+            ✓ No credit card required · ✓ 5 minutes to get started · ✓ Cancel anytime
+          </p>
         </div>
       </section>
     </div>
