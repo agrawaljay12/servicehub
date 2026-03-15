@@ -1,5 +1,7 @@
 # User messages
 BAD_REQUEST = "Bad request"
+INTERNAL_SERVER_ERROR = "Internal server error"
+RESOURCE_NOT_FOUND = "Resource not found"
 USER_CREATED_SUCCESS = "User created successfully"
 USER_ALREADY_EXISTS = "User with this email already exists"
 USER_NOT_FOUND = "User not found"

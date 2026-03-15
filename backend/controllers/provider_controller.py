@@ -54,3 +54,26 @@ async def create_provider(
         return response.success_response("Provider created successfully", {"id": str(result.inserted_id)}, status=http_status.CREATED)
     except Exception as e:
         return response.error_response(str(e), status=http_status.INTERNAL_SERVER_ERROR)
+
+# list all provider based on status =="approved"
+async def get_all_Provider():
+    try:
+        providers =[]
+
+        result = provider_collection.find({"provider_status":"approved"})
+
+        for provider in result:
+
+            provider["_id"] = str(provider["_id"])
+            providers.append(provider)
+            
+        return response.success_response(
+            message = "Providers retrieved successfully",
+            data = providers,
+            status = http_status.OK 
+        )
+    except Exception as e:
+        return response.error_response(
+            message= str(e), 
+            status=http_status.INTERNAL_SERVER_ERROR
+        )

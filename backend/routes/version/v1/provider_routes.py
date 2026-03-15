@@ -1,4 +1,4 @@
-from controllers.provider_controller import create_provider
+from controllers.provider_controller import create_provider,get_all_Provider
 from fastapi import APIRouter, Depends, UploadFile, File, Form,status
 from core.dependency import get_current_user
 from fastapi.responses import JSONResponse
@@ -40,4 +40,12 @@ async def create_provider_endpoint(
         file=file,
         current_user=current_user
     )
+
+# URL: http://127.0.0.1:8000/api/v1/provider/fetch_all
+# method: GET
+# description : fetch all providers based on status =="approved"
+
+@router.get('/fetch_all',response_description="Fetch all approved providers")
+async def fetch_all_providers_endpoint():
+    return await get_all_Provider()
 
