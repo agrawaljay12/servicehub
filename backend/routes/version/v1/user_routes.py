@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends,Request,status
-from controllers.user_controller import create_user, forgot_password, get_all_users,login_user
+from controllers.user_controller import create_user, forgot_password, get_all_users,login_user,get_all_provider
 from core.dependency import get_required_role
 from fastapi.responses import JSONResponse
 # from config.db import get_database
@@ -43,6 +43,14 @@ async def handle_login_user(request:Request):
 @router.get("/fetch/all",response_description="Get all users",dependencies=[Depends(get_required_role(["admin"]))])
 async def get_all_users_route():
     return await get_all_users()
+
+
+# URL: http://127.0.0.1:8000/api/v1/users/fetch/all/provider
+# method : GET
+# description : get all users
+@router.get("/fetch/all/provider",response_description="Get all providers")
+async def get_all_provider_route():
+    return await get_all_provider()
 
 
 # URL: http://127.0.0.1:8000/api/v1/users/forgot-password

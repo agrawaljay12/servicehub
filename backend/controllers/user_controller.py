@@ -205,5 +205,31 @@ async def forgot_password(request:Request):
 
     except HTTPException as e:
         raise e
+
+async def get_all_provider():
+    try:
+
+        users= []
+
+        result = user_collection.find({"role":"provider"})
+
+        for user in result:
+
+            user["id"] = user["_id"]
+
+            del user["_id"]
+
+            users.append(user)
+
+        return response.success_response(
+            message = "Providers retrieved successfully",
+            data = users,
+            status = http_status.OK 
+        )
+    except Exception as e:
+        return response.error_response(
+            message= str(e), 
+            status=http_status.INTERNAL_SERVER_ERROR
+        )
      
    
