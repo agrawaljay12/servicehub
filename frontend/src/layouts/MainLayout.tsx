@@ -8,6 +8,7 @@ import { AdminLayout } from "./AdminLayout";
 import { ProviderAuth } from "../pages/provider/ProviderAuth";
 import { ProviderDashboard } from "../pages/provider/ProviderDashboard";
 import { ProviderProtectedRoute } from "../pages/provider/ProviderProtectedRoute";
+import { ProviderRegister } from "../pages/provider/ProviderRegister";
 
 export const MainLayout = () => {
   return (
@@ -24,6 +25,7 @@ export const MainLayout = () => {
 
         {/* Provider Routes */}
         <Route path="/provider/auth" element={<ProviderAuth />} />
+        <Route path="/provider/register" element={<ProviderRegister />} />
         <Route path="/provider/dashboard" element={<ProviderProtectedRoute><ProviderDashboard /></ProviderProtectedRoute>} />
         
         {/* <Route path="/about" element={<About />} />

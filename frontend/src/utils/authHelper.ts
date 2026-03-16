@@ -4,14 +4,30 @@
  */
 
 /**
- * Get the authorization header with Bearer token
- * @returns Object with Authorization header as string record
+ * Get the authorization header with Bearer token for JSON requests
+ * @returns Object with Authorization and Content-Type headers
  */
 export const getAuthHeader = (): Record<string, string> => {
   const token = localStorage.getItem('access_token');
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
   };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
+};
+
+/**
+ * Get the authorization header for FormData requests (multipart/form-data)
+ * Do NOT set Content-Type - let browser handle it automatically with boundary
+ * @returns Object with only Authorization header
+ */
+export const getAuthHeaderForFormData = (): Record<string, string> => {
+  const token = localStorage.getItem('access_token');
+  const headers: Record<string, string> = {};
   
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;

@@ -32,7 +32,7 @@ async def create_provider(
             return response.error_response("Service category not found", status=http_status.NOT_FOUND)
     
 
-        user_id = str(current_user["_id"])
+        user_id = current_user.get("user_id") or str(current_user.get("_id"))
 
         # save the uploaded file and get its path
         proof_document_path = await save_file(file, "provider")

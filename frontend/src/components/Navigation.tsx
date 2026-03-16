@@ -180,14 +180,16 @@ export function Navigation() {
               );
             })}
             
-            {/* Provide Services Button */}
-            <Link
-              to="/provider/auth"
-              style={{ fontFamily: 'var(--font-worksans)', backgroundColor: PRIMARY_COLOR, color: '#ffffff' }}
-              className="px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-all duration-200 ml-2 shadow-md"
-            >
-              Provide Services
-            </Link>
+            {/* Become a Provider Button - Only for logged-in users */}
+            {isLoggedIn && (
+              <Link
+                to="/provider/register"
+                style={{ fontFamily: 'var(--font-worksans)', backgroundColor: PRIMARY_COLOR, color: '#ffffff' }}
+                className="px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-all duration-200 ml-2 shadow-md"
+              >
+                Become a Provider
+              </Link>
+            )}
           </div>
 
           {/* Right side items */}
@@ -279,15 +281,17 @@ export function Navigation() {
               );
             })}
             
-            {/* Mobile Provide Services Button */}
-            <Link
-              to="/provider/auth"
-              style={{ fontFamily: 'var(--font-worksans)', backgroundColor: PRIMARY_COLOR, color: '#ffffff' }}
-              className="px-4 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-all duration-200 flex items-center justify-center w-full shadow-md"
-              onClick={() => setIsOpen(false)}
-            >
-              Provide Services
-            </Link>
+            {/* Mobile Become a Provider Button - Only for logged-in users */}
+            {isLoggedIn && (
+              <Link
+                to="/provider/register"
+                style={{ fontFamily: 'var(--font-worksans)', backgroundColor: PRIMARY_COLOR, color: '#ffffff' }}
+                className="px-4 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-all duration-200 flex items-center justify-center w-full shadow-md"
+                onClick={() => setIsOpen(false)}
+              >
+                Become a Provider
+              </Link>
+            )}
             
             {/* Mobile Auth Buttons */}
             {isLoggedIn ? (

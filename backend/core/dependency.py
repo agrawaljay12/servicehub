@@ -6,7 +6,10 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 import os
 from typing import List
+from dotenv import load_dotenv
 
+# Load environment variables for JWT configuration
+load_dotenv()
 
 oauth2_scheme =  OAuth2PasswordBearer(tokenUrl="/users/login")
 
