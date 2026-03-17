@@ -9,6 +9,7 @@ from core import http_status
 from core import response
 from core import validation
 from datetime import datetime
+from bson import ObjectId
 
 # define user collections
 user_collection = db["users"]
@@ -205,20 +206,20 @@ async def forgot_password(request:Request):
 
     except HTTPException as e:
         raise e
-
+    
+# get all provider user 
 async def get_all_provider():
     try:
-
         users= []
-
+        
         result = user_collection.find({"role":"provider"})
-
+        
         for user in result:
-
+            
             user["id"] = user["_id"]
-
+            
             del user["_id"]
-
+            
             users.append(user)
 
         return response.success_response(
@@ -231,5 +232,162 @@ async def get_all_provider():
             message= str(e), 
             status=http_status.INTERNAL_SERVER_ERROR
         )
+#  get user by id 
+async def fetch_user_by_id(user_id:str):
+    try:
+
+        if not user_id:
+            raise HTTPException(
+                status_code= http_status.BAD_REQUEST,
+                detail="User Id is required"
+            )
+        
+        user = user_collection.find_one({"_id":ObjectId(user_id)})
+
+        if not user:
+            raise HTTPException(
+                status_code=http_status.BAD_REQUEST,
+                detail="User is not found"
+            )
+        user = str(user)
+
+        return response.success_response(
+            message = "User retrieved successfully",
+            data = user,
+            status = http_status.OK 
+        )
+    
+    except Exception as e:
+       return response.error_response(
+            message=str(e),
+            status=http_status.INTERNAL_SERVER_ERROR
+        )
+    
+# edit user profile by id
+async def edit_user_by_id(user_id:str, request:Request):
+    
+    try:
+        # get the json data from request body
+        data = await request.json()
+        name = data.get("name")
+        email = data.get("email")
+        phone_no = data.get("phone_no")
+        address = data.get("address")
+
+        update_data = {}    
+
+        # if user id is not provided then return error   
+        if not user_id:
+            raise HTTPException(
+                status_code= http_status.BAD_REQUEST,
+                detail="User Id is Required"
+            )     
+
+        #  check the user if is exist or not then return error message.
+        existing_user = user_collection.find_one({"_id":(ObjectId(user_id))})
+
+        if not existing_user:
+            raise HTTPException(
+                status_code = http_status.NOT_FOUND,
+                detail = message.USER_NOT_FOUND
+            )      
+
+         # --------------------------validations logic for fields ----------------------------
+
+        if name :
+            update_data["name"] = name
+        
+        if email:
+            update_data["email"] = email
+
+        if phone_no:
+            update_data["phone_no"] = phone_no
+
+        if address:
+            update_data["address"] = address
+
+        result = user_collection.update_one({"_id":(ObjectId(user_id))},{"$set":update_data})
+
+        if result.matched_count==1:
+            # if data is inserted successfully then return success message and user id
+            return response.success_response(
+                message = f"{update_data} is Updated Successfully",
+                data ={
+                   "_id": user_id
+                },
+                status = http_status.OK 
+            )
+        else:
+            # if data is inserted successfully then return success message and user id
+            return response.error_response(
+                message = "no field is update",
+                data ={
+                   "_id": user_id
+                },
+                status = http_status.BAD_REQUEST
+            )
      
-   
+    # Re-raise validation errors
+    except HTTPException as e:
+        raise e
+    
+    except HTTPException as e:
+        return response.error_response(
+                message=str(e),
+                status=http_status.INTERNAL_SERVER_ERROR
+            )
+# forgot pssword 
+async def change_password(user_id:str,request:Request):
+    try:
+        data = await request.json()
+        old_password = data.get("old_password")
+        confirm_password = data.get("confirm_password")
+        password = data.get("password")
+
+        # if user id is provided then return error message
+        if not user_id :
+            raise HTTPException(
+                status_code=http_status.BAD_REQUEST,
+                detail="User Id is Required"
+            )
+        
+        # password and confirm password doesn't match then return the error message
+        if password != confirm_password:
+            raise HTTPException(
+                status_code=http_status.BAD_REQUEST,
+                detail=message.INVALID_PASSWORD
+            )       
+        
+        user = user_collection.find_one({"_id":ObjectId(user_id)})
+        if not user:
+            raise HTTPException(
+                status_code=http_status.NOT_FOUND,
+                detail=message.USER_NOT_FOUND
+            )
+        
+        result = user_collection.update_one(
+            {"password":old_password},
+            {"$set": {"password": hash_password(password)}}
+        )
+
+        if result.matched_count==1:
+                # if data is inserted successfully then return success message and user id
+                return response.success_response(
+                    message = f" Password is Change Successfully",
+                    data ={
+                    "_id": user_id
+                    },
+                    status = http_status.OK 
+            )
+        else:
+            # if data is inserted successfully then return success message and user id
+            return response.error_response(
+                message = "Password is not change",
+                data ={
+                   "_id": user_id
+                },
+                status = http_status.BAD_REQUEST
+            )
+
+    except HTTPException as e:
+        raise e

@@ -1,10 +1,8 @@
 from fastapi import APIRouter, Depends,Request,status
-from controllers.user_controller import create_user, forgot_password, get_all_users,login_user,get_all_provider
+from controllers.user_controller import change_password, create_user, forgot_password, get_all_users,login_user,get_all_provider,fetch_user_by_id,edit_user_by_id
 from core.dependency import get_required_role
 from fastapi.responses import JSONResponse
 # from config.db import get_database
-
-
 
 router = APIRouter()
 
@@ -53,9 +51,35 @@ async def get_all_provider_route():
     return await get_all_provider()
 
 
+# URL: http://127.0.0.1:8000/api/v1/users/fetch/{user_id}
+# method : GET
+# description : Get User By Id
+@router.get("/fetch/{user_id}",response_description="Get User By Id")
+async def get_user_by_id_endpoint(user_id:str):
+    return await fetch_user_by_id(user_id)
+
+
 # URL: http://127.0.0.1:8000/api/v1/users/forgot-password
 # method :put
 # description : forgot password for user
 @router.put("/forgot-password",response_description="Forgot password for user")
 async def forgot_password_endpoint(request:Request):
     return await forgot_password(request)
+
+
+# URL: http://127.0.0.1:8000/api/v1/users/edit/{user_id}
+# method :put
+# description : Update User By Id
+
+@router.put("/edit/{user_id}",response_description="Update the User data By Id")
+async def edit_user_by_id_endpoint(user_id:str,request:Request):
+    return await edit_user_by_id(user_id,request)
+
+
+# URL: http://127.0.0.1:8000/api/v1/users/change_password/{user_id}
+# method :put
+# description : Change Password By Id
+
+@router.put("/change_password/{user_id}",response_description="Change Password By Id")
+async def change_password_endpoint(user_id:str,request:Request):
+    return await change_password(user_id,request)
