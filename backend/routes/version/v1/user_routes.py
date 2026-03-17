@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends,Request,status
-from controllers.user_controller import change_password, create_user, forgot_password, get_all_users,login_user,get_all_provider,fetch_user_by_id,edit_user_by_id
+from controllers.user_controller import change_password, create_user, forgot_password, get_all_users,login_user,get_all_provider,fetch_user_by_id,edit_user_by_id,delete_user_by_id
 from core.dependency import get_required_role
 from fastapi.responses import JSONResponse
 # from config.db import get_database
@@ -83,3 +83,12 @@ async def edit_user_by_id_endpoint(user_id:str,request:Request):
 @router.put("/change_password/{user_id}",response_description="Change Password By Id")
 async def change_password_endpoint(user_id:str,request:Request):
     return await change_password(user_id,request)
+
+
+# URL: http://127.0.0.1:8000/api/v1/users/delete/{user_id}
+# method :DELETE
+# description : Delete User By Id
+
+@router.delete("/delete/{user_id}",response_description="Delete User By Id")
+async def delete_user_by_id_endpoint(user_id:str):
+    return await delete_user_by_id(user_id)

@@ -1,5 +1,5 @@
 from controllers.provider_controller import create_provider,get_all_approved_Provider,get_all_pending_Provider,approved_reject_request_provider
-from fastapi import APIRouter, Depends, UploadFile, File, Form,status
+from fastapi import APIRouter, Depends, UploadFile, File, Form,status,Request
 from core.dependency import get_current_user,get_required_role
 from fastapi.responses import JSONResponse
 
@@ -46,8 +46,8 @@ async def create_provider_endpoint(
 # description : fetch all providers based on status =="approved"
 
 @router.get('/fetch_all/approved',response_description="Fetch all approved providers")
-async def fetch_all_providers_endpoint():
-    return await get_all_approved_Provider()
+async def fetch_all_providers_endpoint(request:Request):
+    return await get_all_approved_Provider(request)
 
 # URL: http://127.0.0.1:8000/api/v1/provider/fetch_all/pending
 # method: GET

@@ -4,11 +4,12 @@ from core import response
 from core import http_status
 from bson import ObjectId
 from datetime import datetime
-from fastapi import UploadFile, File, Form, Depends,HTTPException
+from fastapi import UploadFile, File, Form, Depends,HTTPException,Request
 from utility.file_upload import save_file
 from core.dependency import get_current_user
 from utility.email_service import send_email
 from utility.otphtml import otp_template
+from pymongo import ASCENDING, DESCENDING
 
 # define the provider collection
 provider_collection = db['providers']
@@ -59,11 +60,39 @@ async def create_provider(
         return response.error_response(str(e), status=http_status.INTERNAL_SERVER_ERROR)
 
 # list all provider based on status =="approved"
-async def get_all_approved_Provider():
+async def get_all_approved_Provider(request:Request):
     try:
+        data = await request.json()
+
+        location = data.get("location")
+        sort_order = data.get("sort_order","asc")
+        sort_by = data.get("sort_by","price")
+        descriptions = data.get("description")
+        page = int(data.get("page",1))
+        limit = int(data.get("limit",10))
+
+        query_filter ={"provider_status":"approved"}
+
+        # search with location or descriptions
+        if location:
+            query_filter["location"] = {
+                "$regex": location,
+                "$options": "i"   # case-insensitive
+            }
+
+        if descriptions:
+            query_filter["description"] = {
+                "$regex": descriptions,
+                "$options": "i"   # case-insensitive
+            }
+        
+        sort_direction = ASCENDING if sort_order.lower() =="asc" else DESCENDING
+
+        skip = (page - 1) * limit
+
         providers =[]
 
-        result = provider_collection.find({"provider_status":"approved"})
+        result = provider_collection.find(query_filter).sort(sort_by,sort_direction).skip(skip).limit(limit)
 
         for provider in result:
 

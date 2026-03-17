@@ -336,13 +336,14 @@ async def edit_user_by_id(user_id:str, request:Request):
                 message=str(e),
                 status=http_status.INTERNAL_SERVER_ERROR
             )
+    
 # forgot pssword 
 async def change_password(user_id:str,request:Request):
     try:
         data = await request.json()
         old_password = data.get("old_password")
         confirm_password = data.get("confirm_password")
-        password = data.get("password")
+        new_password = data.get("password")
 
         # if user id is provided then return error message
         if not user_id :
@@ -350,12 +351,20 @@ async def change_password(user_id:str,request:Request):
                 status_code=http_status.BAD_REQUEST,
                 detail="User Id is Required"
             )
+
+        # ------------------validation for all required field----------------
+
+        if not old_password or not new_password or not confirm_password:
+            raise HTTPException(
+                status_code=400,
+                detail="All password fields are required"
+            )
         
         # password and confirm password doesn't match then return the error message
-        if password != confirm_password:
+        if new_password != confirm_password:
             raise HTTPException(
                 status_code=http_status.BAD_REQUEST,
-                detail=message.INVALID_PASSWORD
+                detail="new password and confirm password do not match"
             )       
         
         user = user_collection.find_one({"_id":ObjectId(user_id)})
@@ -365,12 +374,19 @@ async def change_password(user_id:str,request:Request):
                 detail=message.USER_NOT_FOUND
             )
         
+        # verify the old password with hash password in database stored
+        if not verify_password(old_password,user["password"]):
+             raise HTTPException(
+                 status_code=http_status.BAD_REQUEST,
+                 detail="old password is incorrect"
+             )
+        
         result = user_collection.update_one(
-            {"password":old_password},
-            {"$set": {"password": hash_password(password)}}
+            {"_id":ObjectId(user_id)},
+            {"$set": {"password": hash_password(new_password)}}
         )
 
-        if result.matched_count==1:
+        if result.modified_count==1:
                 # if data is inserted successfully then return success message and user id
                 return response.success_response(
                     message = f" Password is Change Successfully",
@@ -381,13 +397,63 @@ async def change_password(user_id:str,request:Request):
             )
         else:
             # if data is inserted successfully then return success message and user id
-            return response.error_response(
-                message = "Password is not change",
-                data ={
-                   "_id": user_id
-                },
-                status = http_status.BAD_REQUEST
+            raise HTTPException(
+                status_code= http_status.BAD_REQUEST,
+                detail="password is not change"
             )
+
 
     except HTTPException as e:
         raise e
+    
+    except HTTPException as e:
+        return response.error_response(
+                message=str(e),
+                status=http_status.INTERNAL_SERVER_ERROR
+            )
+    
+# delete the user by id 
+async def delete_user_by_id(user_id:str):
+    try:
+
+        # if user id is provided then return error message
+        if not user_id :
+            raise HTTPException(
+                status_code=http_status.BAD_REQUEST,
+                detail="User Id is Required"
+            )
+
+        user = user_collection.find_one({"_id":ObjectId(user_id)})
+
+        if not user:
+            raise HTTPException(
+                status_code=http_status.NOT_FOUND,
+                detail=message.USER_NOT_FOUND
+            )
+        
+        result = user_collection.delete_one({"_id":ObjectId(user_id)})
+
+        if result.deleted_count==1:
+                # if data is inserted successfully then return success message and user id
+                return response.success_response(
+                    message = f"{user_id} is deleted successfully",
+                    data ={
+                    "_id": user_id
+                    },
+                    status = http_status.OK 
+            )
+        else:
+            # if data is inserted successfully then return success message and user id
+            raise HTTPException(
+                status_code= http_status.BAD_REQUEST,
+                detail="password is not change"
+            )
+   
+    except HTTPException as e:
+        raise e
+    
+    except HTTPException as e:
+        return response.error_response(
+                message=str(e),
+                status=http_status.INTERNAL_SERVER_ERROR
+            )
