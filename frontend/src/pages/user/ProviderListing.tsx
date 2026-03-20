@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { FaTimes, FaPhone, FaMapMarkerAlt, FaArrowLeft } from "react-icons/fa";
+import { FaTimes, FaPhone, FaMapMarkerAlt, FaArrowLeft, FaEnvelope} from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
 import { PROVIDER_ENDPOINTS } from "../../config/provider";
 
@@ -13,9 +13,9 @@ interface ApiProvider {
   description: string;
   rating?: number;
 
-  name: string;
-  email: string;
-  phone_no: string;
+  name?: string;
+  email?: string;
+  phone_no?: string;
 }
 
 interface Provider {
@@ -27,7 +27,7 @@ interface Provider {
   email: string;
   experience: number;
   bio: string;
-  responseTime: string;
+  rating?:number;
 }
 
 const PRIMARY_COLOR = '#0891b2';
@@ -39,13 +39,17 @@ export function ProviderListing() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [filteredProviders, setFilteredProviders] = useState<Provider[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'price' | 'experience'>('price');
+  const [sortField, setSortField] = useState<SortField>('price');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [loading, setLoading] = useState(true);
   const [serverError, setServerError] = useState('');
 
   const serviceName = searchParams.get('service') || 'Service';
+
+  type SortField = 'price' | 'experience' | 'rating';
+  type SortOrder = 'asc' | 'desc';
 
   useEffect(() => {
   const fetchProviders = async () => {
@@ -60,19 +64,23 @@ export function ProviderListing() {
         throw new Error(data?.message || 'Failed to fetch providers');
       }
 
-      const list: ApiProvider[] = Array.isArray(data?.data) ? data.data : [];
+      const list: ApiProvider[] = data?.data?.providers || [];
 
-      // ✅ Direct mapping (NO extra API calls)
-      const mapped = list.map((provider) => ({
+      const mapped: Provider[] = list.map((provider) => ({
         _id: provider._id,
-        name: provider.name || `Provider ${provider._id.slice(-6)}`,
+
+        name: provider.name || "Unknown Provider",
+        email: provider.email || "N/A",
+        phone: provider.phone_no || "N/A",
+
         price: Number(provider.price ?? 0),
-        location: provider.location || 'N/A',
-        phone: provider.phone_no || 'N/A',
-        email: provider.email || 'N/A',
         experience: Number(provider.experience ?? 0),
-        bio: provider.description || '',
-        responseTime: 'N/A'
+        location: provider.location || "N/A",
+
+        bio: provider.description || "",
+        responseTime: "N/A",
+
+        rating: Number(provider.rating ?? 0)
       }));
 
       setProviders(mapped);
@@ -97,22 +105,24 @@ export function ProviderListing() {
   useEffect(() => {
     let filtered = providers.filter(provider =>
       provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      provider.location.toLowerCase().includes(searchTerm.toLowerCase())
+      provider.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      provider.bio.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     // Apply sorting
-    switch (sortBy) {
-      case 'experience':
-        filtered.sort((a, b) => b.experience - a.experience);
-        break;
-      case 'price':
-      default:
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-    }
+    filtered.sort((a, b) => {
+      let valueA = a[sortField] ?? 0;
+      let valueB = b[sortField] ?? 0;
+
+      if (sortOrder === 'asc') {
+        return valueA - valueB;
+      } else {
+        return valueB - valueA;
+      }
+    });
 
     setFilteredProviders(filtered);
-  }, [searchTerm, sortBy, providers]);
+  }, [searchTerm, sortField, sortOrder, providers]);
 
   const handleProviderClick = (provider: Provider) => {
     setSelectedProvider(provider);
@@ -182,29 +192,44 @@ export function ProviderListing() {
       </div>
 
       {/* Main Content */}
-      <div className="px-6 py-8 max-w-7xl mx-auto w-full">
+      <div className="px-6 py-8 max-w-5xl mx-auto w-full">
         {/* Filters Section */}
-        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Search Bar */}
-          <input
-            type="text"
-            placeholder="Search providers by name or location..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={inputStyle}
-            className="px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500"
-          />
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+            {/* Search Bar */}
+              <input
+                type="text"
+                placeholder="Search providers by name or location..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={inputStyle}
+                className="px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              />
 
-          {/* Sort Dropdown */}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'price' | 'experience')}
-            style={inputStyle}
-            className="px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500"
-          >
-            <option value="price">Sort by Price (Low to High)</option>
-            <option value="experience">Sort by Experience</option>
-          </select>
+              {/* Sort Dropdown */}
+
+            <select
+              value={sortField}
+              onChange={(e) => setSortField(e.target.value as SortField)}
+              style={inputStyle}
+              className="px-4 py-3 rounded-lg border"
+            >
+              <option value="price">Price</option>
+              <option value="experience">Experience</option>
+              <option value="rating">Rating</option>
+            </select>
+
+            {/* Sort Order */}
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+              style={inputStyle}
+              className="px-4 py-3 rounded-lg border"
+            >
+              <option value="asc">Low → High</option>
+              <option value="desc">High → Low</option>
+            </select>
+
         </div>
 
         {/* Results Count */}
@@ -262,10 +287,6 @@ export function ProviderListing() {
                   <div className="flex items-center gap-2" style={{ fontFamily: 'var(--font-worksans)' }}>
                     <FaMapMarkerAlt size={14} style={{ opacity: 0.6 }} />
                     <span style={{ fontSize: '14px' }}>{provider.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2" style={{ fontFamily: 'var(--font-worksans)' }}>
-                    <FaPhone size={14} style={{ opacity: 0.6 }} />
-                    <span style={{ fontSize: '14px' }}>{provider.responseTime} response</span>
                   </div>
                   </div>
 
@@ -331,7 +352,7 @@ export function ProviderListing() {
               {/* Info Grid */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div style={{ backgroundColor: theme === 'dark' ? '#1f2937' : '#f5f5f5' }} className="p-4 rounded-lg">
-                  <p style={{ fontFamily: 'var(--font-worksans)', fontSize: '12px', opacity: 0.7 }} className="mb-1">Hourly Rate</p>
+                  <p style={{ fontFamily: 'var(--font-worksans)', fontSize: '12px', opacity: 0.7 }} className="mb-1">Service Charge</p>
                   <p style={{ fontFamily: 'var(--font-outfit)', fontSize: '18px', fontWeight: 'bold', color: PRIMARY_COLOR }}>
                     ${selectedProvider.price}
                   </p>
@@ -342,12 +363,12 @@ export function ProviderListing() {
                     {selectedProvider.experience}+ yrs
                   </p>
                 </div>
-                <div style={{ backgroundColor: theme === 'dark' ? '#1f2937' : '#f5f5f5' }} className="p-4 rounded-lg">
+                {/* <div style={{ backgroundColor: theme === 'dark' ? '#1f2937' : '#f5f5f5' }} className="p-4 rounded-lg">
                   <p style={{ fontFamily: 'var(--font-worksans)', fontSize: '12px', opacity: 0.7 }} className="mb-1">Response Time</p>
                   <p style={{ fontFamily: 'var(--font-outfit)', fontSize: '18px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                     {selectedProvider.responseTime}
                   </p>
-                </div>
+                </div> */}
               </div>
 
               {/* Contact Info */}
@@ -360,6 +381,7 @@ export function ProviderListing() {
                   </div>
                   {selectedProvider.email !== 'N/A' && (
                     <div className="flex items-center gap-3">
+                      <FaEnvelope size={16} style={{ color: PRIMARY_COLOR }} />
                       <span style={{ fontFamily: 'var(--font-worksans)' }}>{selectedProvider.email}</span>
                     </div>
                   )}

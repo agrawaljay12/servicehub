@@ -326,9 +326,9 @@ export function ProviderRegister() {
             <h1 style={{ fontFamily: 'var(--font-outfit)', color: theme === 'dark' ? '#ffffff' : '#000000' }} className="text-4xl font-black mb-2">
               Register as Provider
             </h1>
-            <p style={{ fontFamily: 'var(--font-worksans)', color: theme === 'dark' ? '#aaaaaa' : '#666666' }} className="text-sm">
+            {/* <p style={{ fontFamily: 'var(--font-worksans)', color: theme === 'dark' ? '#aaaaaa' : '#666666' }} className="text-sm">
               Get provider authority and start offering services
-            </p>
+            </p> */}
           </div>
 
           {/* Success Message */}
@@ -346,96 +346,6 @@ export function ProviderRegister() {
             </div>
           )}
 
-          {/* User Info Loaded */}
-          {userData && (
-            <div
-              style={{
-                backgroundColor: theme === 'dark' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.05)',
-                borderLeft: '4px solid #10b981',
-                color: theme === 'dark' ? '#aaaaaa' : '#666666'
-              }}
-              className="mb-6 p-4 rounded-lg text-sm space-y-2"
-            >
-              <p style={{ fontFamily: 'var(--font-worksans)' }}>
-                ✓ <span style={{ fontWeight: 'bold' }}>Profile Loaded</span>
-              </p>
-              <div style={{ fontSize: '12px', opacity: 0.8 }}>
-                {userData.user_id && <p>ID: {userData.user_id}</p>}
-                {userData.name && <p>Name: {userData.name}</p>}
-                {userData.email && <p>Email: {userData.email}</p>}
-                {userData.address && <p>Location pre-filled from your profile</p>}
-              </div>
-            </div>
-          )}
-
-          {/* Profile Info Display */}
-          {userData && (
-            <div
-              style={{
-                backgroundColor: theme === 'dark' ? 'rgba(8, 145, 178, 0.05)' : 'rgba(8, 145, 178, 0.03)',
-                borderTop: '1px solid #0891b2',
-                borderBottom: '1px solid #0891b2'
-              }}
-              className="mb-6 p-4 rounded-lg"
-            >
-              <p style={{ fontFamily: 'var(--font-worksans)', color: '#0891b2', fontSize: '12px', fontWeight: 'bold' }}>
-                ACCOUNT INFORMATION USED FOR REGISTRATION
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-                {userData.user_id && (
-                  <div>
-                    <p style={{ fontSize: '11px', opacity: 0.7, fontFamily: 'var(--font-worksans)' }}>User ID</p>
-                    <p style={{ ...labelStyle, fontSize: '14px', fontFamily: 'var(--font-outfit)', wordBreak: 'break-all' }}>
-                      {userData.user_id}
-                    </p>
-                  </div>
-                )}
-                {userData.name && (
-                  <div>
-                    <p style={{ fontSize: '11px', opacity: 0.7, fontFamily: 'var(--font-worksans)' }}>Name</p>
-                    <p style={{ ...labelStyle, fontSize: '14px' }}>{userData.name}</p>
-                  </div>
-                )}
-                {userData.email && (
-                  <div>
-                    <p style={{ fontSize: '11px', opacity: 0.7, fontFamily: 'var(--font-worksans)' }}>Email</p>
-                    <p style={{ ...labelStyle, fontSize: '14px' }}>{userData.email}</p>
-                  </div>
-                )}
-                {userData.address && (
-                  <div>
-                    <p style={{ fontSize: '11px', opacity: 0.7, fontFamily: 'var(--font-worksans)' }}>Address (Location)</p>
-                    <p style={{ ...labelStyle, fontSize: '14px' }}>{userData.address}</p>
-                  </div>
-                )}
-              </div>
-              
-              {/* Token Status */}
-              <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #0891b2' }}>
-                <p style={{ fontSize: '11px', opacity: 0.7, fontFamily: 'var(--font-worksans)' }}>Connection Status</p>
-                <div style={{ display: 'flex', gap: '8px', marginTop: '6px', fontSize: '12px' }}>
-                  <span style={{ 
-                    backgroundColor: localStorage.getItem('access_token') ? '#10b981' : '#ef4444',
-                    color: '#ffffff',
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                    fontFamily: 'var(--font-worksans)'
-                  }}>
-                    {localStorage.getItem('access_token') ? '✓ Token' : '✗ No Token'}
-                  </span>
-                  <span style={{
-                    backgroundColor: userData.user_id ? '#10b981' : '#ef4444',
-                    color: '#ffffff',
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                    fontFamily: 'var(--font-worksans)'
-                  }}>
-                    {userData.user_id ? '✓ User ID' : '✗ No User ID'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">

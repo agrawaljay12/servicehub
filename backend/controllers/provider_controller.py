@@ -86,25 +86,16 @@ async def get_all_approved_Provider(request: Request):
 
         page = max(int(data.get("page") or params.get("page") or 1), 1)
         limit = max(int(data.get("limit") or params.get("limit") or 10), 1)
-
         skip = (page - 1) * limit
 
         # -------- Filtering -------- #
-        query_filter = {
-            "provider_status": "approved"
-        }
+        query_filter = {"provider_status": "approved"}
 
         if location:
-            query_filter["location"] = {
-                "$regex": location,
-                "$options": "i"
-            }
+            query_filter["location"] = {"$regex": location, "$options": "i"}
 
         if description:
-            query_filter["description"] = {
-                "$regex": description,
-                "$options": "i"
-            }
+            query_filter["description"] = {"$regex": description, "$options": "i"}
 
         # -------- Sorting -------- #
         allowed_sort_fields = ["price", "rating", "experience"]
@@ -113,62 +104,72 @@ async def get_all_approved_Provider(request: Request):
 
         sort_direction = ASCENDING if sort_order == "asc" else DESCENDING
 
-        # -------- Aggregation -------- #
+        # -------- Aggregation Pipeline -------- #
         pipeline = [
-                {"$match": query_filter},
+            {"$match": query_filter},
 
-                {
-                    "$addFields": {
-                        "user_id_obj": {
-                            "$convert": {
-                                "input": "$user_id",
-                                "to": "objectId",
-                                "onError": None,
-                                "onNull": None
-                            }
+            # convert user_id (string → ObjectId)
+            {
+                "$addFields": {
+                    "user_id_obj": {
+                        "$convert": {
+                            "input": "$user_id",
+                            "to": "objectId",
+                            "onError": None,
+                            "onNull": None
                         }
                     }
-                },
-
-                {
-                    "$lookup": {
-                        "from": "users",
-                        "localField": "user_id_obj",
-                        "foreignField": "_id",
-                        "as": "user_details"
-                    }
-                },
-
-                {
-                    "$unwind": {
-                        "path": "$user_details",
-                        "preserveNullAndEmptyArrays": True
-                    }
-                },
-
-                {
-                    "$project": {
-                        "_id": 1,
-                        "description": 1,
-                        "price": 1,
-                        "rating": 1,
-                        "location": 1,
-                        "experience": 1,
-
-                        # ✅ User fields
-                        "name": "$user_details.name",
-                        "email": "$user_details.email",
-                        "phone_no": "$user_details.phone_no"
-                    }
                 }
-            ]
-        
+            },
+
+            # join with users collection
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "user_id_obj",
+                    "foreignField": "_id",
+                    "as": "user_details"
+                }
+            },
+
+            {"$unwind": {"path": "$user_details", "preserveNullAndEmptyArrays": True}},
+
+            # -------- FACET (data + total count) -------- #
+            {
+                "$facet": {
+                    "data": [
+                        {"$sort": {sort_by: sort_direction}},
+                        {"$skip": skip},
+                        {"$limit": limit},
+                        {
+                            "$project": {
+                                "_id": 1,
+                                "description": 1,
+                                "price": 1,
+                                "rating": 1,
+                                "location": 1,
+                                "experience": 1,
+
+                                # user data
+                                "name": "$user_details.name",
+                                "email": "$user_details.email",
+                                "phone_no": "$user_details.phone_no"
+                            }
+                        }
+                    ],
+                    "total": [
+                        {"$count": "count"}
+                    ]
+                }
+            }
+        ]
+
         result = list(provider_collection.aggregate(pipeline))
 
-        providers = result[0]["data"]
-        total_count = result[0]["total"][0]["count"] if result[0]["total"] else 0
+        providers = result[0]["data"] if result else []
+        total_count = result[0]["total"][0]["count"] if result and result[0]["total"] else 0
 
-        # Convert ObjectId to string
+        # Convert ObjectId → string
         for provider in providers:
             provider["_id"] = str(provider["_id"])
 
