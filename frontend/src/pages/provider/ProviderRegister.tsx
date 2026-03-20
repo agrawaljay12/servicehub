@@ -174,6 +174,11 @@ export function ProviderRegister() {
         setLoading(false);
         return;
       }
+      if (!userData?.user_id) {
+        setServerError('User ID missing. Please login again.');
+        setLoading(false);
+        return;
+      }
 
       const formDataToSend = new FormData();
       formDataToSend.append('service_category_id', formData.service_category_id);

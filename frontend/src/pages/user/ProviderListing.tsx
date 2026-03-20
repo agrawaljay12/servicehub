@@ -1,16 +1,30 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { FaTimes, FaPhone, FaMapMarkerAlt, FaStar, FaArrowLeft } from "react-icons/fa";
+import { FaTimes, FaPhone, FaMapMarkerAlt, FaArrowLeft } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
+import { PROVIDER_ENDPOINTS } from "../../config/provider";
+
+
+interface ApiProvider {
+  _id: string;
+  location: string;
+  experience?: string;
+  price: string;
+  description: string;
+  rating?: number;
+
+  name: string;
+  email: string;
+  phone_no: string;
+}
 
 interface Provider {
   _id: string;
   name: string;
-  rating: number;
-  reviews: number;
   price: number;
   location: string;
   phone: string;
+  email: string;
   experience: number;
   bio: string;
   responseTime: string;
@@ -18,70 +32,66 @@ interface Provider {
 
 const PRIMARY_COLOR = '#0891b2';
 
-// Mock provider data for demo
-const MOCK_PROVIDERS: Provider[] = [
-  {
-    _id: '1',
-    name: 'John Smith',
-    rating: 4.8,
-    reviews: 156,
-    price: 85,
-    location: 'Downtown',
-    phone: '+1 (555) 123-4567',
-    experience: 8,
-    bio: 'Experienced professional with 8+ years in the industry. Reliable and punctual.',
-    responseTime: '< 1 hour'
-  },
-  {
-    _id: '2',
-    name: 'Sarah Johnson',
-    rating: 4.9,
-    reviews: 203,
-    price: 95,
-    location: 'Midtown',
-    phone: '+1 (555) 234-5678',
-    experience: 12,
-    bio: 'Expert provider with excellent customer feedback. Premium quality guaranteed.',
-    responseTime: '< 30 mins'
-  },
-  {
-    _id: '3',
-    name: 'Mike Davis',
-    rating: 4.6,
-    reviews: 89,
-    price: 65,
-    location: 'Suburbs',
-    phone: '+1 (555) 345-6789',
-    experience: 5,
-    bio: 'Affordable rates with quality service. Perfect for startups and small projects.',
-    responseTime: '2-3 hours'
-  },
-  {
-    _id: '4',
-    name: 'Emily Chen',
-    rating: 4.7,
-    reviews: 127,
-    price: 75,
-    location: 'Tech Park',
-    phone: '+1 (555) 456-7890',
-    experience: 6,
-    bio: 'Creative and flexible professional. Great for custom requirements.',
-    responseTime: '< 2 hours'
-  }
-];
-
 export function ProviderListing() {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [providers] = useState<Provider[]>(MOCK_PROVIDERS);
-  const [filteredProviders, setFilteredProviders] = useState<Provider[]>(MOCK_PROVIDERS);
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [filteredProviders, setFilteredProviders] = useState<Provider[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'rating' | 'price' | 'experience'>('rating');
+  const [sortBy, setSortBy] = useState<'price' | 'experience'>('price');
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [showDetail, setShowDetail] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [serverError, setServerError] = useState('');
 
   const serviceName = searchParams.get('service') || 'Service';
+
+  useEffect(() => {
+  const fetchProviders = async () => {
+    setLoading(true);
+    setServerError('');
+
+    try {
+      const response = await fetch(PROVIDER_ENDPOINTS.fetchAll);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || 'Failed to fetch providers');
+      }
+
+      const list: ApiProvider[] = Array.isArray(data?.data) ? data.data : [];
+
+      // ✅ Direct mapping (NO extra API calls)
+      const mapped = list.map((provider) => ({
+        _id: provider._id,
+        name: provider.name || `Provider ${provider._id.slice(-6)}`,
+        price: Number(provider.price ?? 0),
+        location: provider.location || 'N/A',
+        phone: provider.phone_no || 'N/A',
+        email: provider.email || 'N/A',
+        experience: Number(provider.experience ?? 0),
+        bio: provider.description || '',
+        responseTime: 'N/A'
+      }));
+
+      setProviders(mapped);
+      setFilteredProviders(mapped);
+
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Connection error';
+
+      setServerError(errorMessage);
+      setProviders([]);
+      setFilteredProviders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProviders();
+}, []);
 
   // Apply filters and sorting
   useEffect(() => {
@@ -92,15 +102,12 @@ export function ProviderListing() {
 
     // Apply sorting
     switch (sortBy) {
-      case 'price':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
       case 'experience':
         filtered.sort((a, b) => b.experience - a.experience);
         break;
-      case 'rating':
+      case 'price':
       default:
-        filtered.sort((a, b) => b.rating - a.rating);
+        filtered.sort((a, b) => a.price - b.price);
         break;
     }
 
@@ -119,16 +126,6 @@ export function ProviderListing() {
 
   const handleContactProvider = (provider: Provider) => {
     alert(`Contacting ${provider.name}\nPhone: ${provider.phone}\n\nThis feature will be implemented soon!`);
-  };
-
-  const renderStars = (rating: number) => {
-    return [...Array(5)].map((_, i) => (
-      <FaStar
-        key={i}
-        size={14}
-        style={{ color: i < Math.floor(rating) ? '#fbbf24' : theme === 'dark' ? '#333333' : '#e5e7eb' }}
-      />
-    ));
   };
 
   // Theme styles
@@ -201,11 +198,10 @@ export function ProviderListing() {
           {/* Sort Dropdown */}
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'rating' | 'price' | 'experience')}
+            onChange={(e) => setSortBy(e.target.value as 'price' | 'experience')}
             style={inputStyle}
             className="px-4 py-3 rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-cyan-500"
           >
-            <option value="rating">Sort by Rating</option>
             <option value="price">Sort by Price (Low to High)</option>
             <option value="experience">Sort by Experience</option>
           </select>
@@ -213,11 +209,24 @@ export function ProviderListing() {
 
         {/* Results Count */}
         <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.7, marginBottom: '1.5rem' }}>
-          Showing {filteredProviders.length} {filteredProviders.length === 1 ? 'provider' : 'providers'}
+          {loading ? 'Loading providers...' : `Showing ${filteredProviders.length} ${filteredProviders.length === 1 ? 'provider' : 'providers'}`}
         </p>
+
+        {serverError && (
+          <div className="mb-6 p-4 rounded-lg border" style={{ borderColor: '#ef4444', color: '#ef4444', fontFamily: 'var(--font-worksans)' }}>
+            {serverError}
+          </div>
+        )}
 
         {/* Providers List */}
         <div className="space-y-4">
+            {!loading && filteredProviders.length === 0 && !serverError && (
+              <div className="p-6 rounded-lg border-2" style={cardStyle}>
+                <p style={{ fontFamily: 'var(--font-worksans)', opacity: 0.8 }}>
+                  No providers found.
+                </p>
+              </div>
+            )}
             {filteredProviders.map((provider) => (
               <div
                 key={provider._id}
@@ -232,14 +241,11 @@ export function ProviderListing() {
                       <h3 className="text-xl font-bold" style={{ fontFamily: 'var(--font-outfit)' }}>
                         {provider.name}
                       </h3>
-                      <div className="flex items-center gap-3 mt-1">
-                        <div className="flex items-center gap-1">
-                          {renderStars(provider.rating)}
-                          <span style={{ fontFamily: 'var(--font-worksans)', fontSize: '12px', opacity: 0.7, marginLeft: '0.25rem' }}>
-                            {provider.rating.toFixed(1)} ({provider.reviews} reviews)
-                          </span>
-                        </div>
-                      </div>
+                      {provider.email !== 'N/A' && (
+                        <p style={{ fontFamily: 'var(--font-worksans)', fontSize: '12px', opacity: 0.7, marginTop: '4px' }}>
+                          {provider.email}
+                        </p>
+                      )}
                     </div>
                     <div className="text-right">
                       <p style={{ fontFamily: 'var(--font-outfit)', fontSize: '20px', fontWeight: 'bold', color: PRIMARY_COLOR }}>
@@ -253,14 +259,14 @@ export function ProviderListing() {
 
                   {/* Info Row */}
                   <div className="flex flex-wrap gap-4 mb-2">
-                    <div className="flex items-center gap-2" style={{ fontFamily: 'var(--font-worksans)' }}>
-                      <FaMapMarkerAlt size={14} style={{ opacity: 0.6 }} />
-                      <span style={{ fontSize: '14px' }}>{provider.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2" style={{ fontFamily: 'var(--font-worksans)' }}>
-                      <FaPhone size={14} style={{ opacity: 0.6 }} />
-                      <span style={{ fontSize: '14px' }}>{provider.responseTime} response</span>
-                    </div>
+                  <div className="flex items-center gap-2" style={{ fontFamily: 'var(--font-worksans)' }}>
+                    <FaMapMarkerAlt size={14} style={{ opacity: 0.6 }} />
+                    <span style={{ fontSize: '14px' }}>{provider.location}</span>
+                  </div>
+                  <div className="flex items-center gap-2" style={{ fontFamily: 'var(--font-worksans)' }}>
+                    <FaPhone size={14} style={{ opacity: 0.6 }} />
+                    <span style={{ fontSize: '14px' }}>{provider.responseTime} response</span>
+                  </div>
                   </div>
 
                   <p style={{ fontFamily: 'var(--font-worksans)', fontSize: '13px', opacity: 0.7 }}>
@@ -298,12 +304,11 @@ export function ProviderListing() {
                 <h2 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-outfit)' }}>
                   {selectedProvider.name}
                 </h2>
-                <div className="flex items-center gap-2 mt-2">
-                  {renderStars(selectedProvider.rating)}
-                  <span style={{ fontFamily: 'var(--font-worksans)', fontSize: '12px', opacity: 0.7 }}>
-                    {selectedProvider.rating.toFixed(1)} ({selectedProvider.reviews} reviews)
-                  </span>
-                </div>
+                {selectedProvider.email !== 'N/A' && (
+                  <p style={{ fontFamily: 'var(--font-worksans)', fontSize: '12px', opacity: 0.7, marginTop: '4px' }}>
+                    {selectedProvider.email}
+                  </p>
+                )}
               </div>
               <button
                 onClick={handleCloseDetail}
@@ -324,7 +329,7 @@ export function ProviderListing() {
               </div>
 
               {/* Info Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div style={{ backgroundColor: theme === 'dark' ? '#1f2937' : '#f5f5f5' }} className="p-4 rounded-lg">
                   <p style={{ fontFamily: 'var(--font-worksans)', fontSize: '12px', opacity: 0.7 }} className="mb-1">Hourly Rate</p>
                   <p style={{ fontFamily: 'var(--font-outfit)', fontSize: '18px', fontWeight: 'bold', color: PRIMARY_COLOR }}>
@@ -343,12 +348,6 @@ export function ProviderListing() {
                     {selectedProvider.responseTime}
                   </p>
                 </div>
-                <div style={{ backgroundColor: theme === 'dark' ? '#1f2937' : '#f5f5f5' }} className="p-4 rounded-lg">
-                  <p style={{ fontFamily: 'var(--font-worksans)', fontSize: '12px', opacity: 0.7 }} className="mb-1">Reviews</p>
-                  <p style={{ fontFamily: 'var(--font-outfit)', fontSize: '18px', fontWeight: 'bold' }}>
-                    {selectedProvider.reviews}
-                  </p>
-                </div>
               </div>
 
               {/* Contact Info */}
@@ -359,6 +358,11 @@ export function ProviderListing() {
                     <FaPhone size={16} style={{ color: PRIMARY_COLOR }} />
                     <span style={{ fontFamily: 'var(--font-worksans)' }}>{selectedProvider.phone}</span>
                   </div>
+                  {selectedProvider.email !== 'N/A' && (
+                    <div className="flex items-center gap-3">
+                      <span style={{ fontFamily: 'var(--font-worksans)' }}>{selectedProvider.email}</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-3">
                     <FaMapMarkerAlt size={16} style={{ color: PRIMARY_COLOR }} />
                     <span style={{ fontFamily: 'var(--font-worksans)' }}>{selectedProvider.location}</span>

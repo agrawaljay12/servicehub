@@ -227,6 +227,7 @@ export const USER_ENDPOINTS = {
    * Note: Typically called after OTP verification in forgot password flow
    */
   forgotPassword: `${API_BASE_URL}/users/forgot-password`,
+  fetch_user_by_id: `${API_BASE_URL}/users/fetch/{user_id}`
 };
 
 /**

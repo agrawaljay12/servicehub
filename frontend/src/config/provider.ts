@@ -62,7 +62,7 @@ export const PROVIDER_ENDPOINTS = {
 
   /**
    * Get All Approved Providers
-   * GET /provider/fetch_all
+   * GET /provider/fetch_all/approved
    * 
    * Authentication: Not required
    * 
@@ -92,7 +92,7 @@ export const PROVIDER_ENDPOINTS = {
    * 
    * Note: Only returns providers with status "approved"
    */
-  fetchAll: `${API_BASE_URL}/provider/fetch_all`
+  fetchAll: `${API_BASE_URL}/provider/fetch_all/approved`
 };
 
 /**

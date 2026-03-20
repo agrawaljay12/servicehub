@@ -37,6 +37,12 @@ async def create_provider(
     
 
         user_id = current_user.get("user_id") or str(current_user.get("_id"))
+        if not user_id:
+            return response.error_response("User id not found in token", status=http_status.UNAUTHORIZED)
+
+        # ensure user exists
+        if not user_collection.find_one({"_id": ObjectId(user_id)}):
+            return response.error_response("User not found", status=http_status.NOT_FOUND)
 
         # save the uploaded file and get its path
         proof_document_path = await save_file(file, "provider")
@@ -58,55 +64,128 @@ async def create_provider(
         return response.success_response("Provider created successfully", {"id": str(result.inserted_id)}, status=http_status.CREATED)
     except Exception as e:
         return response.error_response(str(e), status=http_status.INTERNAL_SERVER_ERROR)
-
-# list all provider based on status =="approved"
-async def get_all_approved_Provider(request:Request):
+    
+# ---------------------fetch the all approved provider with searching, pagination, sorting.---------------------------------
+async def get_all_approved_Provider(request: Request):
     try:
-        data = await request.json()
+        # -------- Parse Request -------- #
+        try:
+            data = await request.json()
+            if not isinstance(data, dict):
+                data = {}
+        except:
+            data = {}
 
-        location = data.get("location")
-        sort_order = data.get("sort_order","asc")
-        sort_by = data.get("sort_by","price")
-        descriptions = data.get("description")
-        page = int(data.get("page",1))
-        limit = int(data.get("limit",10))
+        params = request.query_params
 
-        query_filter ={"provider_status":"approved"}
+        location = data.get("location") or params.get("location")
+        description = data.get("description") or params.get("description")
 
-        # search with location or descriptions
-        if location:
-            query_filter["location"] = {
-                "$regex": location,
-                "$options": "i"   # case-insensitive
-            }
+        sort_order = (data.get("sort_order") or params.get("sort_order") or "asc").lower()
+        sort_by = data.get("sort_by") or params.get("sort_by") or "price"
 
-        if descriptions:
-            query_filter["description"] = {
-                "$regex": descriptions,
-                "$options": "i"   # case-insensitive
-            }
-        
-        sort_direction = ASCENDING if sort_order.lower() =="asc" else DESCENDING
+        page = max(int(data.get("page") or params.get("page") or 1), 1)
+        limit = max(int(data.get("limit") or params.get("limit") or 10), 1)
 
         skip = (page - 1) * limit
 
-        providers =[]
+        # -------- Filtering -------- #
+        query_filter = {
+            "provider_status": "approved"
+        }
 
-        result = provider_collection.find(query_filter).sort(sort_by,sort_direction).skip(skip).limit(limit)
+        if location:
+            query_filter["location"] = {
+                "$regex": location,
+                "$options": "i"
+            }
 
-        for provider in result:
+        if description:
+            query_filter["description"] = {
+                "$regex": description,
+                "$options": "i"
+            }
 
+        # -------- Sorting -------- #
+        allowed_sort_fields = ["price", "rating", "experience"]
+        if sort_by not in allowed_sort_fields:
+            sort_by = "price"
+
+        sort_direction = ASCENDING if sort_order == "asc" else DESCENDING
+
+        # -------- Aggregation -------- #
+        pipeline = [
+                {"$match": query_filter},
+
+                {
+                    "$addFields": {
+                        "user_id_obj": {
+                            "$convert": {
+                                "input": "$user_id",
+                                "to": "objectId",
+                                "onError": None,
+                                "onNull": None
+                            }
+                        }
+                    }
+                },
+
+                {
+                    "$lookup": {
+                        "from": "users",
+                        "localField": "user_id_obj",
+                        "foreignField": "_id",
+                        "as": "user_details"
+                    }
+                },
+
+                {
+                    "$unwind": {
+                        "path": "$user_details",
+                        "preserveNullAndEmptyArrays": True
+                    }
+                },
+
+                {
+                    "$project": {
+                        "_id": 1,
+                        "description": 1,
+                        "price": 1,
+                        "rating": 1,
+                        "location": 1,
+                        "experience": 1,
+
+                        # ✅ User fields
+                        "name": "$user_details.name",
+                        "email": "$user_details.email",
+                        "phone_no": "$user_details.phone_no"
+                    }
+                }
+            ]
+        
+        result = list(provider_collection.aggregate(pipeline))
+
+        providers = result[0]["data"]
+        total_count = result[0]["total"][0]["count"] if result[0]["total"] else 0
+
+        # Convert ObjectId to string
+        for provider in providers:
             provider["_id"] = str(provider["_id"])
-            providers.append(provider)
-            
+
         return response.success_response(
-            message = "Providers retrieved successfully",
-            data = providers,
-            status = http_status.OK 
+            message="Providers retrieved successfully",
+            data={
+                "providers": providers,
+                "total": total_count,
+                "page": page,
+                "limit": limit
+            },
+            status=http_status.OK
         )
+
     except Exception as e:
         return response.error_response(
-            message= str(e), 
+            message=str(e),
             status=http_status.INTERNAL_SERVER_ERROR
         )
 
