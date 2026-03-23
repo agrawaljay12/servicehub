@@ -86,8 +86,22 @@ async def forgot_password_endpoint(request:Request):
 # description : Update User By Id
 
 @router.put("/edit/{user_id}",response_description="Update the User data By Id")
-async def edit_user_by_id_endpoint(user_id:str,request:Request):
-    return await edit_user_by_id(user_id,request)
+async def edit_user_by_id_endpoint( 
+    user_id: str,
+    name: str = Form(None),
+    email: str = Form(None),
+    phone_no: str = Form(None),
+    address: str = Form(None),
+    file: UploadFile = File(None) 
+):
+    return await edit_user_by_id(
+        user_id=user_id,
+        name=name,
+        email= email,
+        phone_no=phone_no,
+        address=address,
+        file=file
+    )
 
 
 # URL: http://127.0.0.1:8000/api/v1/users/change_password/{user_id}

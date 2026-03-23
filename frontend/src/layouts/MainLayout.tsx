@@ -14,6 +14,9 @@ import { GuestContact} from "../pages/guest/Contact";
 import { GuestAbout } from "../pages/guest/About";
 import { UserContact } from "../pages/user/Contact";
 import { UserAbout } from "../pages/user/About";
+import { ChangePassword } from "../pages/user/Changepassword";
+import { ViewProfile } from "../pages/user/ViewProfile";
+import { EditProfile } from "../pages/user/EditProfile";
 
 export const MainLayout = () => {
   return (
@@ -33,6 +36,9 @@ export const MainLayout = () => {
         <Route path="/user/providers" element={<ProviderListing />} />
         <Route path="/user/contact" element={<UserContact/>} />
         <Route path="/user/about" element={<UserAbout/>} />
+        <Route path="/user/change-password" element={<ChangePassword/>} />
+        <Route path="/user/view-profile" element={<ViewProfile/>} />
+        <Route path="/user/edit-profile" element={<EditProfile/>} />
       
         {/* Admin Routes */}
         <Route path="/admin/auth" element={<AdminAuth />} />

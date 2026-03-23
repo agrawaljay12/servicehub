@@ -262,7 +262,7 @@ async def fetch_user_by_id(user_id:str):
                 status_code=http_status.BAD_REQUEST,
                 detail="User is not found"
             )
-        user = str(user)
+        user["_id"] = str(user["_id"])
 
         return response.success_response(
             message = "User retrieved successfully",
@@ -276,40 +276,34 @@ async def fetch_user_by_id(user_id:str):
             status=http_status.INTERNAL_SERVER_ERROR
         )
     
-# edit user profile by id
-async def edit_user_by_id(user_id:str, request:Request):
-    
+async def edit_user_by_id(
+    user_id: str,
+    name: str = Form(None),
+    email: str = Form(None),
+    phone_no: str = Form(None),
+    address: str = Form(None),
+    file: UploadFile = File(None)   # profile image
+):
     try:
-        # get the json data from request body
-        data = await request.json()
-        name = data.get("name")
-        email = data.get("email")
-        phone_no = data.get("phone_no")
-        address = data.get("address")
+        update_data = {}
 
-        update_data = {}    
-
-        # if user id is not provided then return error   
         if not user_id:
             raise HTTPException(
-                status_code= http_status.BAD_REQUEST,
+                status_code=http_status.BAD_REQUEST,
                 detail="User Id is Required"
-            )     
+            )
 
-        #  check the user if is exist or not then return error message.
-        existing_user = user_collection.find_one({"_id":(ObjectId(user_id))})
+        existing_user = user_collection.find_one({"_id": ObjectId(user_id)})
 
         if not existing_user:
             raise HTTPException(
-                status_code = http_status.NOT_FOUND,
-                detail = message.USER_NOT_FOUND
-            )      
+                status_code=http_status.NOT_FOUND,
+                detail=message.USER_NOT_FOUND
+            )
 
-         # --------------------------validations logic for fields ----------------------------
-
-        if name :
+        if name:
             update_data["name"] = name
-        
+
         if email:
             update_data["email"] = email
 
@@ -319,36 +313,44 @@ async def edit_user_by_id(user_id:str, request:Request):
         if address:
             update_data["address"] = address
 
-        result = user_collection.update_one({"_id":(ObjectId(user_id))},{"$set":update_data})
+        # Profile image upload
+        if file:
+            profile_url = await save_file(file, "users")  # your existing function
+            update_data["profile"] = profile_url
 
-        if result.matched_count==1:
-            # if data is inserted successfully then return success message and user id
+        # If nothing to update
+        if not update_data:
+            raise HTTPException(
+                status_code=400,
+                detail="No data provided to update"
+            )
+
+        result = user_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": update_data}
+        )
+
+        if result.modified_count == 1:
             return response.success_response(
-                message = f"{update_data} is Updated Successfully",
-                data ={
-                   "_id": user_id
-                },
-                status = http_status.OK 
+                message="Profile updated successfully",
+                data={"_id": user_id},
+                status=http_status.OK
             )
         else:
-            # if data is inserted successfully then return success message and user id
             return response.error_response(
-                message = "no field is update",
-                data ={
-                   "_id": user_id
-                },
-                status = http_status.BAD_REQUEST
+                message="No changes made",
+                data={"_id": user_id},
+                status=http_status.BAD_REQUEST
             )
-     
-    # Re-raise validation errors
+
     except HTTPException as e:
         raise e
-    
-    except HTTPException as e:
+
+    except Exception as e:
         return response.error_response(
-                message=str(e),
-                status=http_status.INTERNAL_SERVER_ERROR
-            )
+            message=str(e),
+            status=http_status.INTERNAL_SERVER_ERROR
+        )
     
 # forgot pssword 
 async def change_password(user_id:str,request:Request):
@@ -356,7 +358,7 @@ async def change_password(user_id:str,request:Request):
         data = await request.json()
         old_password = data.get("old_password")
         confirm_password = data.get("confirm_password")
-        new_password = data.get("password")
+        new_password = data.get("new_password")
 
         # if user id is provided then return error message
         if not user_id :
