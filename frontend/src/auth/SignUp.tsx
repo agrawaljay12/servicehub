@@ -24,6 +24,8 @@ export function SignUp() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
+  const [profileFile, setProfileFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
 
   // Step 1: Email verification - send OTP to email
 
@@ -97,20 +99,29 @@ export function SignUp() {
     if (!validateForm()) {
       return;
     }
+    
 
     setLoading(true);
     try {
       // Step 1: Create user
+      const formDataToSend = new FormData();
+      formDataToSend.append("name", formData.name.trim());
+      formDataToSend.append("email", formData.email.trim());
+      formDataToSend.append("password", formData.password);
+      formDataToSend.append("phone_no", formData.phone_no.trim());
+      formDataToSend.append(
+        "address",
+        `${formData.street}, ${formData.city}, ${formData.state}, ${formData.country}, ${formData.postal_code}`
+      );
+
+      // 👇 add file
+      if (profileFile) {
+        formDataToSend.append("file", profileFile);
+      }
+
       const createResponse = await fetch(USER_ENDPOINTS.create, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          password: formData.password,
-          phone_no: formData.phone_no.trim(),
-          address: `${formData.street.trim()}, ${formData.city.trim()}, ${formData.state.trim()}, ${formData.country.trim()}, ${formData.postal_code.trim()}`
-        })
+        method: "POST",
+        body: formDataToSend
       });
 
       const createData = await createResponse.json();
@@ -276,265 +287,298 @@ export function SignUp() {
           )}
 
           {step === 'form' ? (
-            <form onSubmit={handleSubmitForm} className="space-y-5">
-              {/* Name Field */}
-              <div>
-                <label style={labelStyle} className="block text-sm font-semibold mb-2">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => {
-                    setFormData({ ...formData, name: e.target.value });
-                    if (errors.name) setErrors({ ...errors, name: '' });
-                  }}
-                  placeholder="John Doe"
-                  style={inputStyle}
-                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
-                />
-                {errors.name && <p style={errorStyle} className="mt-2 text-sm">{errors.name}</p>}
-              </div>
+            <form onSubmit={handleSubmitForm} className="space-y-5 max-w-6xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* upload profile */}
+                      <div className="md:col-span-2 flex flex-col items-center mb-6">
+                        <label className="relative cursor-pointer">
+                          <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-[#0891b2] flex items-center justify-center">
+                            {preview ? (
+                              <img src={preview} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-sm text-gray-400">Upload</span>
+                            )}
+                          </div>
 
-              {/* Email Field */}
-              <div>
-                <label style={labelStyle} className="block text-sm font-semibold mb-2">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => {
-                    setFormData({ ...formData, email: e.target.value });
-                    if (errors.email) setErrors({ ...errors, email: '' });
-                  }}
-                  placeholder="you@example.com"
-                  style={inputStyle}
-                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
-                />
-                {errors.email && <p style={errorStyle} className="mt-2 text-sm">{errors.email}</p>}
-              </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setProfileFile(file);
+                                setPreview(URL.createObjectURL(file));
+                              }
+                            }}
+                          />
+                        </label>
+                      </div>
+                      
+                      {/* Name Field */}
+                      <div>
+                        <label style={labelStyle} className="block text-sm font-semibold mb-2">
+                          Full Name
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.name}
+                          onChange={(e) => {
+                            setFormData({ ...formData, name: e.target.value });
+                            if (errors.name) setErrors({ ...errors, name: '' });
+                          }}
+                          placeholder="John Doe"
+                          style={inputStyle}
+                          className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
+                        />
+                        {errors.name && <p style={errorStyle} className="mt-2 text-sm">{errors.name}</p>}
+                      </div>
+                      
+                      {/* Email Field */}
+                        <div>
+                          <label style={labelStyle} className="block text-sm font-semibold mb-2">
+                            Email Address
+                          </label>
+                          <input
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => {
+                              setFormData({ ...formData, email: e.target.value });
+                              if (errors.email) setErrors({ ...errors, email: '' });
+                            }}
+                            placeholder="you@example.com"
+                            style={inputStyle}
+                            className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
+                          />
+                          {errors.email && <p style={errorStyle} className="mt-2 text-sm">{errors.email}</p>}
+                        </div>
 
-              {/* Phone Number Field */}
-              <div>
-                <label style={labelStyle} className="block text-sm font-semibold mb-2">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  value={formData.phone_no}
-                  onChange={(e) => {
-                    setFormData({ ...formData, phone_no: e.target.value });
-                    if (errors.phone_no) setErrors({ ...errors, phone_no: '' });
-                  }}
-                  placeholder="+919876543210"
-                  style={inputStyle}
-                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
-                />
-                {errors.phone_no && <p style={errorStyle} className="mt-2 text-sm">{errors.phone_no}</p>}
-              </div>
+                        {/* Phone Number Field */}
+                        <div>
+                          <label style={labelStyle} className="block text-sm font-semibold mb-2">
+                            Phone Number
+                          </label>
+                          <input
+                            type="tel"
+                            value={formData.phone_no}
+                            onChange={(e) => {
+                              setFormData({ ...formData, phone_no: e.target.value });
+                              if (errors.phone_no) setErrors({ ...errors, phone_no: '' });
+                            }}
+                            placeholder="+919876543210"
+                            style={inputStyle}
+                            className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
+                          />
+                          {errors.phone_no && <p style={errorStyle} className="mt-2 text-sm">{errors.phone_no}</p>}
+                        </div>
 
-              {/* Address Fields */}
-              <div>
-                <label style={labelStyle} className="block text-sm font-semibold mb-2">
-                  Street Address
-                </label>
-                <input
-                  type="text"
-                  value={formData.street}
-                  onChange={(e) => {
-                    setFormData({ ...formData, street: e.target.value });
-                    if (errors.street) setErrors({ ...errors, street: '' });
-                  }}
-                  placeholder="123 Main Street"
-                  style={inputStyle}
-                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
-                />
-                {errors.street && <p style={errorStyle} className="mt-2 text-sm">{errors.street}</p>}
-              </div>
+                        {/* Address Fields */}
+                        <div>
+                          <label style={labelStyle} className="block text-sm font-semibold mb-2">
+                            Street Address
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.street}
+                            onChange={(e) => {
+                              setFormData({ ...formData, street: e.target.value });
+                              if (errors.street) setErrors({ ...errors, street: '' });
+                            }}
+                            placeholder="123 Main Street"
+                            style={inputStyle}
+                            className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
+                          />
+                          {errors.street && <p style={errorStyle} className="mt-2 text-sm">{errors.street}</p>}
+                        </div>
 
-              <div className="grid grid-cols-2 gap-4">
+                        {/* city field */}
+                        <div>
+                          <label style={labelStyle} className="block text-sm font-semibold mb-2">
+                            City
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.city}
+                            onChange={(e) => {
+                              setFormData({ ...formData, city: e.target.value });
+                              if (errors.city) setErrors({ ...errors, city: '' });
+                            }}
+                            placeholder="New York"
+                            style={inputStyle}
+                            className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
+                          />
+                          {errors.city && <p style={errorStyle} className="mt-2 text-sm">{errors.city}</p>}
+                        </div>
+
+                        {/*  state field*/}
+                        <div>
+                          <label style={labelStyle} className="block text-sm font-semibold mb-2">
+                            State/Province
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.state}
+                            onChange={(e) => {
+                              setFormData({ ...formData, state: e.target.value });
+                              if (errors.state) setErrors({ ...errors, state: '' });
+                            }}
+                            placeholder="NY"
+                            style={inputStyle}
+                            className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
+                          />
+                          {errors.state && <p style={errorStyle} className="mt-2 text-sm">{errors.state}</p>}
+                        </div>
+                        
+                        {/* country fields */}
+                          <div>
+                            <label style={labelStyle} className="block text-sm font-semibold mb-2">
+                              Country
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.country}
+                              onChange={(e) => {
+                                setFormData({ ...formData, country: e.target.value });
+                                if (errors.country) setErrors({ ...errors, country: '' });
+                              }}
+                              placeholder="USA"
+                              style={inputStyle}
+                              className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
+                            />
+                            {errors.country && <p style={errorStyle} className="mt-2 text-sm">{errors.country}</p>}
+                          </div>
+                          
+                        {/* pin code */}
+                          <div>
+                            <label style={labelStyle} className="block text-sm font-semibold mb-2">
+                              Postal Code
+                            </label>
+                            <input
+                              type="text"
+                              value={formData.postal_code}
+                              onChange={(e) => {
+                                setFormData({ ...formData, postal_code: e.target.value });
+                                if (errors.postal_code) setErrors({ ...errors, postal_code: '' });
+                              }}
+                              placeholder="10001"
+                              style={inputStyle}
+                              className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
+                            />
+                            {errors.postal_code && <p style={errorStyle} className="mt-2 text-sm">{errors.postal_code}</p>}
+                          </div>
+
+                        {/* Password Field */}
+                          <div>
+                            <label style={labelStyle} className="block text-sm font-semibold mb-2">
+                              Password
+                            </label>
+                            <input
+                              type="password"
+                              value={formData.password}
+                              onChange={(e) => {
+                                setFormData({ ...formData, password: e.target.value });
+                                if (errors.password) setErrors({ ...errors, password: '' });
+                              }}
+                              placeholder="Password123!"
+                              style={inputStyle}
+                              className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
+                            />
+                            {errors.password && <p style={errorStyle} className="mt-2 text-sm">{errors.password}</p>}
+                            <p style={{ fontFamily: 'var(--font-worksans)', color: theme === 'dark' ? '#888888' : '#999999' }} className="mt-2 text-xs">
+                              Must: Start uppercase, 8-15 chars, have lowercase, digit, special char
+                            </p>
+                          </div>
+
+                        {/* Confirm Password Field */}
+                          <div>
+                            <label style={labelStyle} className="block text-sm font-semibold mb-2">
+                              Confirm Password
+                            </label>
+                            <input
+                              type="password"
+                              value={formData.confirmPassword}
+                              onChange={(e) => {
+                                setFormData({ ...formData, confirmPassword: e.target.value });
+                                if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' });
+                              }}
+                              placeholder="Confirm password"
+                              style={inputStyle}
+                              className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
+                            />
+                            {errors.confirmPassword && <p style={errorStyle} className="mt-2 text-sm">{errors.confirmPassword}</p>}
+                          </div>
+                </div>         
+             
                 <div>
-                  <label style={labelStyle} className="block text-sm font-semibold mb-2">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.city}
-                    onChange={(e) => {
-                      setFormData({ ...formData, city: e.target.value });
-                      if (errors.city) setErrors({ ...errors, city: '' });
-                    }}
-                    placeholder="New York"
-                    style={inputStyle}
-                    className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
-                  />
-                  {errors.city && <p style={errorStyle} className="mt-2 text-sm">{errors.city}</p>}
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      style={{ fontFamily: 'var(--font-worksans)' }}
+                      className="w-full bg-linear-to-r from-[#0891b2] to-[#06b6d4] text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 mt-6"
+                    >
+                      {loading ? 'Creating Account...' : 'Create Account'}
+                    </button>
                 </div>
-                <div>
-                  <label style={labelStyle} className="block text-sm font-semibold mb-2">
-                    State/Province
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.state}
-                    onChange={(e) => {
-                      setFormData({ ...formData, state: e.target.value });
-                      if (errors.state) setErrors({ ...errors, state: '' });
-                    }}
-                    placeholder="NY"
-                    style={inputStyle}
-                    className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
-                  />
-                  {errors.state && <p style={errorStyle} className="mt-2 text-sm">{errors.state}</p>}
-                </div>
-              </div>
+              
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label style={labelStyle} className="block text-sm font-semibold mb-2">
-                    Country
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.country}
-                    onChange={(e) => {
-                      setFormData({ ...formData, country: e.target.value });
-                      if (errors.country) setErrors({ ...errors, country: '' });
-                    }}
-                    placeholder="USA"
-                    style={inputStyle}
-                    className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
-                  />
-                  {errors.country && <p style={errorStyle} className="mt-2 text-sm">{errors.country}</p>}
-                </div>
-                <div>
-                  <label style={labelStyle} className="block text-sm font-semibold mb-2">
-                    Postal Code
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.postal_code}
-                    onChange={(e) => {
-                      setFormData({ ...formData, postal_code: e.target.value });
-                      if (errors.postal_code) setErrors({ ...errors, postal_code: '' });
-                    }}
-                    placeholder="10001"
-                    style={inputStyle}
-                    className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
-                  />
-                  {errors.postal_code && <p style={errorStyle} className="mt-2 text-sm">{errors.postal_code}</p>}
-                </div>
-              </div>
-
-              {/* Password Field */}
-              <div>
-                <label style={labelStyle} className="block text-sm font-semibold mb-2">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => {
-                    setFormData({ ...formData, password: e.target.value });
-                    if (errors.password) setErrors({ ...errors, password: '' });
-                  }}
-                  placeholder="Password123!"
-                  style={inputStyle}
-                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
-                />
-                {errors.password && <p style={errorStyle} className="mt-2 text-sm">{errors.password}</p>}
-                <p style={{ fontFamily: 'var(--font-worksans)', color: theme === 'dark' ? '#888888' : '#999999' }} className="mt-2 text-xs">
-                  Must: Start uppercase, 8-15 chars, have lowercase, digit, special char
+                {/* Sign In Link */}
+                <p style={{ fontFamily: 'var(--font-worksans)', color: theme === 'dark' ? '#aaaaaa' : '#666666' }} className="text-center text-sm">
+                  Already have an account?{' '}
+                  <Link to="/auth/signin" style={{ color: '#0891b2', fontWeight: 'bold' }} className="hover:underline">
+                    Sign In
+                  </Link>
                 </p>
-              </div>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOTP} className="space-y-5">
+                <div style={successStyle} className="p-4 rounded-lg text-center">
+                  <FaCheck className="mx-auto mb-2" size={24} />
+                  <p style={{ fontFamily: 'var(--font-worksans)' }} className="font-semibold">Check Your Email</p>
+                  <p style={{ fontFamily: 'var(--font-worksans)', fontSize: '0.875rem' }}>We sent a 6-digit OTP to {formData.email}</p>
+                </div>
 
-              {/* Confirm Password Field */}
-              <div>
-                <label style={labelStyle} className="block text-sm font-semibold mb-2">
-                  Confirm Password
-                </label>
-                <input
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={(e) => {
-                    setFormData({ ...formData, confirmPassword: e.target.value });
-                    if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' });
-                  }}
-                  placeholder="Confirm password"
-                  style={inputStyle}
-                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 transition-all"
-                />
-                {errors.confirmPassword && <p style={errorStyle} className="mt-2 text-sm">{errors.confirmPassword}</p>}
-              </div>
+                {/* OTP Field */}
+                <div>
+                  <label style={labelStyle} className="block text-sm font-semibold mb-2">
+                    Enter OTP Code
+                  </label>
+                  <input
+                    type="text"
+                    value={otp}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setOtp(value);
+                      if (errors.otp) setErrors({ ...errors, otp: '' });
+                    }}
+                    placeholder="000000"
+                    maxLength={6}
+                    style={inputStyle}
+                    className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 text-center text-2xl tracking-widest transition-all"
+                  />
+                  {errors.otp && <p style={errorStyle} className="mt-2 text-sm">{errors.otp}</p>}
+                </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                style={{ fontFamily: 'var(--font-worksans)' }}
-                className="w-full bg-linear-to-r from-[#0891b2] to-[#06b6d4] text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 mt-6"
-              >
-                {loading ? 'Creating Account...' : 'Create Account'}
-              </button>
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={loading || otp.length !== 6}
+                  style={{ fontFamily: 'var(--font-worksans)' }}
+                  className="w-full bg-linear-to-r from-[#0891b2] to-[#06b6d4] text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 mt-6"
+                >
+                  {loading ? 'Verifying...' : 'Verify OTP'}
+                </button>
 
-              {/* Sign In Link */}
-              <p style={{ fontFamily: 'var(--font-worksans)', color: theme === 'dark' ? '#aaaaaa' : '#666666' }} className="text-center text-sm">
-                Already have an account?{' '}
-                <Link to="/auth/signin" style={{ color: '#0891b2', fontWeight: 'bold' }} className="hover:underline">
-                  Sign In
-                </Link>
-              </p>
-            </form>
-          ) : (
-            <form onSubmit={handleVerifyOTP} className="space-y-5">
-              <div style={successStyle} className="p-4 rounded-lg text-center">
-                <FaCheck className="mx-auto mb-2" size={24} />
-                <p style={{ fontFamily: 'var(--font-worksans)' }} className="font-semibold">Check Your Email</p>
-                <p style={{ fontFamily: 'var(--font-worksans)', fontSize: '0.875rem' }}>We sent a 6-digit OTP to {formData.email}</p>
-              </div>
-
-              {/* OTP Field */}
-              <div>
-                <label style={labelStyle} className="block text-sm font-semibold mb-2">
-                  Enter OTP Code
-                </label>
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                    setOtp(value);
-                    if (errors.otp) setErrors({ ...errors, otp: '' });
-                  }}
-                  placeholder="000000"
-                  maxLength={6}
-                  style={inputStyle}
-                  className="w-full px-4 py-3 rounded-lg border-2 focus:outline-none focus:border-opacity-100 text-center text-2xl tracking-widest transition-all"
-                />
-                {errors.otp && <p style={errorStyle} className="mt-2 text-sm">{errors.otp}</p>}
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading || otp.length !== 6}
-                style={{ fontFamily: 'var(--font-worksans)' }}
-                className="w-full bg-linear-to-r from-[#0891b2] to-[#06b6d4] text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 mt-6"
-              >
-                {loading ? 'Verifying...' : 'Verify OTP'}
-              </button>
-
-              {/* Resend OTP Button */}
-              <button
-                type="button"
-                onClick={handleResendOTP}
-                disabled={loading}
-                style={{ fontFamily: 'var(--font-worksans)', color: '#0891b2' }}
-                className="w-full border-2 border-[#0891b2] py-3 rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50 font-semibold"
-              >
-                Resend OTP
-              </button>
+                {/* Resend OTP Button */}
+                <button
+                  type="button"
+                  onClick={handleResendOTP}
+                  disabled={loading}
+                  style={{ fontFamily: 'var(--font-worksans)', color: '#0891b2' }}
+                  className="w-full border-2 border-[#0891b2] py-3 rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50 font-semibold"
+                >
+                  Resend OTP
+                </button>
             </form>
           )}
         </div>

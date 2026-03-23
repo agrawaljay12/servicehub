@@ -9,4 +9,6 @@ class User(BaseModel):
     status:str = "active" # default status is active (True)
     role:str = "user"  # default role is 'user'
     created_at:str
+    profile: str = "http://localhost:8000/static/uploads/users/profile.png"
+
 

@@ -2,8 +2,9 @@
 import re
 from config.db import db
 from models.users import User
-from fastapi import HTTPException, Request
+from fastapi import HTTPException, Request, File,UploadFile,Form
 from core.core import hash_password,verify_password,create_access_token
+from utility.file_upload import save_file
 from core import message
 from core import http_status
 from core import response
@@ -15,22 +16,23 @@ from bson import ObjectId
 user_collection = db["users"]
 
 # create a new user function
-async def create_user(request:Request):
+async def create_user(
+        name:str = Form(...),
+        email:str = Form(...),
+        password:str = Form(...),
+        phone_no:str = Form(...),
+        address:str = Form(...),
+        file:UploadFile = File(None)
+
+):
     
     try:
-        # get the json data from request body
-        data = await request.json()
-        name = data.get("name")
-        email = data.get("email")
-        password = data.get("password")
-        phone_no = data.get("phone_no")
-        address = data.get("address")
-        status = data.get("status", "active")  # default status is active
-
-
         # --------------------------validations logic for fields ----------------------------
         # validation for all required fields
         # validation.validate_data_all_required_field(data)
+        
+        print(name)
+        print(email)
         
         # validate name format
         validation.validate_name(name)
@@ -49,7 +51,7 @@ async def create_user(request:Request):
             
 
         #  check the user if already exists with the same email then return error message.
-        if user_collection.find_one({"email":data["email"]}):
+        if user_collection.find_one({"email":email}):
             raise HTTPException(
                 status_code = http_status.BAD_REQUEST,
                 detail = message.USER_ALREADY_EXISTS
@@ -58,6 +60,14 @@ async def create_user(request:Request):
         # convert the plain password to hashed password before storing in database that user entered
         hashed_password = hash_password(password) 
 
+        # if file is found then insert then otherwise default 
+        if file:
+            profile_picture = await save_file(file,"users")
+        else:
+            profile_picture = "http://localhost:8000/static/uploads/users/profile.png"
+        
+
+
         # insert the user data into the database
         user_data = User(
             name=name,
@@ -65,9 +75,12 @@ async def create_user(request:Request):
             password=hashed_password,
             phone_no=phone_no,
             address=address,
-            status=status,
-            created_at=datetime.now().isoformat()
+            created_at=datetime.now().isoformat(),
+            profile = profile_picture
         )
+
+        print(user_data)
+
         result = user_collection.insert_one(user_data.model_dump())
 
         # if data is inserted successfully then return success message and user id

@@ -119,37 +119,41 @@ export function UserNavigation() {
               {theme === "light" ? <FaMoon /> : <FaSun />}
             </button>
 
-            {/* USER PROFILE DROPDOWN */}
             <div
-              className="relative hidden sm:block"
-              onClick={() => setIsProfileOpen(!isProfileOpen)}
-            >
-              {/* Profile Icon */}
-              <div
-                className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
-                style={{ backgroundColor: PRIMARY_COLOR }}
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                ref={profileRef}
+                className="relative hidden sm:block"
+                onMouseEnter={() => setIsProfileOpen(true)}
+                onMouseLeave={() => setIsProfileOpen(false)}
               >
-                <FaUser color="white" size={14} />
-              </div>
-
-              {/* Dropdown */}
-              {isProfileOpen && (
+                {/* Profile Icon */}
                 <div
-                  className="absolute right-0 mt-2 w-56 rounded-lg shadow-lg py-2 z-50"
+                  className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
+                  style={{ backgroundColor: PRIMARY_COLOR }}
+                >
+                  <FaUser color="white" size={14} />
+                </div>
+
+                {/* Hover Bridge (prevents flicker) */}
+                <div className="absolute right-0 mt-0.5 w-56 h-2"></div>
+
+                {/* Dropdown */}
+                <div
+                  className={`absolute right-0 mt-2 w-56 rounded-lg shadow-lg py-2 z-50 transition-all duration-200 ${
+                    isProfileOpen
+                      ? "opacity-100 translate-y-0 visible"
+                      : "opacity-0 translate-y-2 invisible"
+                  }`}
                   style={{
                     backgroundColor: theme === "dark" ? "#111" : "#fff",
                     border: "1px solid rgba(0,0,0,0.1)"
                   }}
                 >
-                  {/* Username */}
                   <div className="px-4 py-2 border-b text-sm font-semibold">
                     {userName}
                   </div>
 
-                  {/* Menu Items */}
                   <Link to="/user/profile" className="block px-4 py-2 hover:bg-gray-100">
-                    Edit Profile
+                    View Profile
                   </Link>
 
                   <Link to="/user/change-password" className="block px-4 py-2 hover:bg-gray-100">
@@ -164,7 +168,6 @@ export function UserNavigation() {
                     Booking Status
                   </Link>
 
-                  {/* Logout */}
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-4 py-2 hover:bg-red-100 text-red-500"
@@ -172,7 +175,6 @@ export function UserNavigation() {
                     Logout
                   </button>
                 </div>
-              )}
             </div>
 
             {/* Mobile Toggle */}
