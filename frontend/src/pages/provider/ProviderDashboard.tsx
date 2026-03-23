@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaPlus, FaEdit, FaTrash, FaSpinner, FaHome, FaSignOutAlt, FaTimes } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrash, FaSpinner, FaTimes } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
 import { CATEGORY_ENDPOINTS } from "../../config/category";
 import { getAuthHeader } from "../../utils/authHelper";
@@ -37,14 +37,11 @@ export function ProviderDashboard() {
     bio: ''
   });
 
-  const [providerInfo] = useState(() => {
-    const provider = localStorage.getItem('provider_user');
-    return provider ? JSON.parse(provider) : { name: 'Provider', id: 'Unknown' };
-  });
+
 
   // Check authentication on mount
   useEffect(() => {
-    const token = localStorage.getItem('provider_token');
+    const token = localStorage.getItem('access_token');
     if (!token) {
       navigate('/provider/auth');
       return;
@@ -225,17 +222,7 @@ export function ProviderDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('provider_token');
-    localStorage.removeItem('provider_user');
-    navigate('/');
-  };
 
-  // Theme styles
-  const headerStyle = {
-    backgroundColor: theme === 'dark' ? '#111111' : '#f9fafb',
-    borderBottom: `1px solid ${theme === 'dark' ? '#333333' : '#e5e7eb'}`
-  };
 
   const containerBg = {
     backgroundColor: theme === 'dark' ? '#000000' : '#ffffff',
@@ -260,40 +247,6 @@ export function ProviderDashboard() {
 
   return (
     <div style={containerBg}>
-      {/* Header */}
-      <div style={headerStyle} className="sticky top-0 z-40">
-        <div className="px-6 py-4 max-w-7xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-outfit)' }}>
-              Provider Dashboard
-            </h1>
-            <p style={{ fontSize: '14px', opacity: 0.7, fontFamily: 'var(--font-worksans)' }}>
-              Logged in as: <span style={{ fontWeight: 'bold' }}>{providerInfo.name}</span>
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg hover:opacity-70 transition-all"
-              style={{
-                backgroundColor: theme === 'dark' ? '#1f2937' : '#e5e7eb',
-                fontFamily: 'var(--font-worksans)'
-              }}
-              title="Go to home page"
-            >
-              <FaHome /> Home
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg hover:opacity-70 transition-all text-red-500"
-              style={{ fontFamily: 'var(--font-worksans)' }}
-              title="Logout"
-            >
-              <FaSignOutAlt /> Logout
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* Main Content */}
       <div className="px-6 py-8 max-w-7xl mx-auto">
