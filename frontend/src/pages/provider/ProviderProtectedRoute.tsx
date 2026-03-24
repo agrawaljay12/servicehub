@@ -1,32 +1,26 @@
-import { } from "react";
-import { Navigate } from "react-router-dom";
-import {ProviderSidebar} from "../../components/provider/Sidebar"
-import { ProviderHeader } from "../../components/provider/Header";
+import { Navigate, Outlet } from "react-router-dom";
 
-interface ProviderProtectedRouteProps {
-  children?: React.ReactNode;
-}
+export function ProviderProtectedRoute() {
+  const token = localStorage.getItem("access_token");
+  const user = localStorage.getItem("user");
 
-export function ProviderProtectedRoute({ children }: ProviderProtectedRouteProps) {
-  const providerToken = localStorage.getItem('access_token');
+  let parsedUser = null;
 
-  if (!providerToken) {
+  try {
+    parsedUser = user ? JSON.parse(user) : null;
+  } catch {
+    parsedUser = null;
+  }
+
+  // If not logged in → ALWAYS redirect
+  if (!token) {
     return <Navigate to="/auth/signin" replace />;
   }
 
- 
-  return (
-    <div className="flex">
-      <ProviderSidebar />
+  // Wrong role
+  if (parsedUser?.role !== "provider") {
+    return <Navigate to="/auth/signin" replace />;
+  }
 
-      <div className="ml-64 w-full">
-        <ProviderHeader />
-
-        <div className="p-6">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-
+  return <Outlet />;
 }

@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { FaUserCircle, FaChevronDown, FaMoon, FaSun } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
-import { useNavigate, Link } from "react-router-dom";
-import { getCurrentUser, clearAuthData } from "../../utils/authHelper";
+import {Link } from "react-router-dom";
+import { getCurrentUser } from "../../utils/authHelper";
 
 export function AdminHeader() {
   const { theme, toggleTheme } = useTheme();
-  const navigate = useNavigate();
+  
 
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -18,6 +18,20 @@ export function AdminHeader() {
     user?.name ||
     user?.email ||
     "Provider";
+
+  useEffect(() => {
+      window.history.pushState(null, "", window.location.href);
+
+      const handlePopState = () => {
+        window.history.pushState(null, "", window.location.href);
+      };
+
+      window.addEventListener("popstate", handlePopState);
+
+      return () => {
+        window.removeEventListener("popstate", handlePopState);
+      };
+    }, []);
 
   // ✅ Handle hover open
   const handleMouseEnter = () => {
@@ -48,11 +62,11 @@ export function AdminHeader() {
       document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ Logout
-  const handleLogout = () => {
-    clearAuthData();
-    navigate("/");
-  };
+  // logout
+const handleLogout = () => {
+  localStorage.clear();
+  window.location.replace("/"); 
+};
 
   return (
     <header

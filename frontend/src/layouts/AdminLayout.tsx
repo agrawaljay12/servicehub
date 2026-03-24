@@ -22,59 +22,66 @@ export const AdminLayout = () => {
     const userData = localStorage.getItem("user");
 
     if (!token || !userData) {
-      navigate("/admin/auth");
+      navigate("/auth/signin", { replace: true });
       setIsAuthed(false);
       return;
     }
 
-    const parsedUser = JSON.parse(userData);
+    try {
+      const parsedUser = JSON.parse(userData);
 
-    // ✅ Role check
-    if (parsedUser.role !== "admin") {
-      navigate("/");
+      // ✅ Role check
+      if (parsedUser.role !== "admin") {
+        navigate("/signin/auth", { replace: true }); // ✅ FIXED
+        setIsAuthed(false);
+        return;
+      }
+
+      setIsAuthed(true);
+    } catch {
+      navigate("/auth/signin", { replace: true });
       setIsAuthed(false);
-      return;
     }
-
-    setIsAuthed(true);
   }, [navigate]);
 
   if (isAuthed === null) return null;
+
+  // 🔥 Block rendering if not authed
   if (!isAuthed) return null;
 
   return (
-  <div
-    className="min-h-screen flex"
-    style={{
-      backgroundColor: theme === "dark" ? "#000" : "#f9fafb"
-    }}
-  >
-    {/* Sidebar */}
-    <AdminSidebar />
+    <div
+      className="min-h-screen flex"
+      style={{
+        backgroundColor: theme === "dark" ? "#000" : "#f9fafb"
+      }}
+    >
+      {/* Sidebar */}
+      <AdminSidebar />
 
-    {/* Right Side (Header + Content) */}
-    <div className="flex-1 ml-64 flex flex-col min-h-screen">
+      {/* Right Side */}
+      <div className="flex-1 ml-64 flex flex-col min-h-screen">
 
-      {/* Header */}
-      <div className="sticky top-0 z-40">
-        <AdminHeader />
+        {/* Header */}
+        <div className="sticky top-0 z-40">
+          <AdminHeader />
+        </div>
+
+        {/* Content */}
+        <main className="flex-1 p-6 overflow-y-auto">
+          <Routes>
+            <Route index element={<Navigate to="dashboard" replace />} /> {/* ✅ FIXED */}
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="manage-service" element={<ManageService />} />
+            <Route path="manage-user" element={<ManageUsers />} />
+            <Route path="manage-provider" element={<ManageProvider />} />
+            <Route path="view-profile" element={<AdminViewProfile />} />
+            <Route path="edit-profile" element={<AdminEditProfile />} />
+            <Route path="change-password" element={<AdminChangePassword />} />
+          </Routes>
+        </main>
+
       </div>
-
-      {/* Main Content */}
-      <main className="flex-1 p-6 overflow-y-auto">
-        <Routes>
-          <Route index element={<Navigate to="dashboard" />} />
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="manage-service" element={<ManageService />} />
-          <Route path="manage-user" element={<ManageUsers />} />
-          <Route path="manage-provider" element={<ManageProvider/>} />
-          <Route path="view-profile" element={<AdminViewProfile/>} />
-          <Route path="edit-profile" element={<AdminEditProfile/>} />
-          <Route path="change-password" element={<AdminChangePassword/>} />
-        </Routes>
-      </main>
-
     </div>
-  </div>
-);
+  );
 };

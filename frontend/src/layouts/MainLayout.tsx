@@ -20,6 +20,7 @@ import { EditProfile } from "../pages/user/EditProfile";
 import { ProviderChangePassword } from "../pages/provider/Changepassword";
 import { ProviderEditProfile } from "../pages/provider/EditProfile";
 import { ProviderViewProfile } from "../pages/provider/ViewProfile";
+import { ProviderLayout } from "./ProviderLayout";
 
 export const MainLayout = () => {
   return (
@@ -49,16 +50,20 @@ export const MainLayout = () => {
 
         {/* Provider Routes */}
         {/* <Route path="/provider/auth" element={<ProviderAuth />} /> */}
+       
+
         <Route path="/provider/register" element={<ProviderRegister />} />
-        <Route path="/provider/dashboard" element={<ProviderProtectedRoute><ProviderDashboard /></ProviderProtectedRoute>} />
-        <Route path="/provider/change-password" element={<ProviderProtectedRoute><ProviderChangePassword/></ProviderProtectedRoute>} />
-        <Route path="/provider/edit-profile" element={<ProviderProtectedRoute><ProviderEditProfile /></ProviderProtectedRoute>} />
-        <Route path="/provider/view-profile" element={<ProviderProtectedRoute><ProviderViewProfile /></ProviderProtectedRoute>} />
         
-        {/* <Route path="/about" element={<About />} />
-        //<Route path="/project" element={<Projects />} />
-        <Route path="/contact" element={<Contact/>} />
-        <Route path="/skills" element={<TechnicalSkills/>} /> */}
+      <Route path="/provider" element={<ProviderProtectedRoute />}>
+        <Route element={<ProviderLayout />}>
+
+          <Route path="dashboard" element={<ProviderDashboard />} />
+          <Route path="change-password" element={<ProviderChangePassword />} />
+          <Route path="edit-profile" element={<ProviderEditProfile />} />
+          <Route path="view-profile" element={<ProviderViewProfile />} />
+
+        </Route>
+      </Route>
       </Routes>
     </main>
   );
