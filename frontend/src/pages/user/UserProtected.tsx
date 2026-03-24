@@ -5,14 +5,14 @@ interface AdminProtectedRouteProps {
 }
 
 /**
- * AdminProtectedRoute component
- * Protects admin routes by checking for admin token
- * Only allows access if user is authenticated as admin
+ * UserProtectedRoute component
+ * Protects user by checking for user token
+ * Only allows access if user is authenticated as user role
  */
 export function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
-  const adminToken = localStorage.getItem('access_token');
+  const usertoken = localStorage.getItem('access_token');
 
-  if (!adminToken) {
+  if (!usertoken) {
     return <Navigate to="/auth/signin" replace />;
   }
 

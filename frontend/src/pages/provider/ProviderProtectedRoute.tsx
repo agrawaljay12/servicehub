@@ -11,7 +11,7 @@ export function ProviderProtectedRoute({ children }: ProviderProtectedRouteProps
   const providerToken = localStorage.getItem('access_token');
 
   if (!providerToken) {
-    return <Navigate to="/provider/auth" replace />;
+    return <Navigate to="/auth/signin" replace />;
   }
 
  
