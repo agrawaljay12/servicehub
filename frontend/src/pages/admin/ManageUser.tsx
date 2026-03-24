@@ -1,26 +1,30 @@
 import { useEffect, useState } from "react";
 import { USER_ENDPOINTS } from "../../config/api";
 import { useTheme } from "../../context/ThemeContext";
+import { getAuthHeaderForFormData } from "../../utils/authHelper";
 
 export function ManageUsers() {
   const { theme } = useTheme();
 
   const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // ✅ Fetch Users
+  // FETCH USERS (ADMIN ONLY)
   const fetchUsers = async () => {
-    setLoading(true);
-    setError("");
-
     try {
-      const res = await fetch(USER_ENDPOINTS.fetchAll);
+      const res = await fetch(USER_ENDPOINTS.fetchAll, {
+        method: "GET",  
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaderForFormData() // TOKEN HERE
+        }
+      });
+
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || "Failed to fetch users");
-        return;
+        throw new Error(data.message || "Unauthorized or failed");
       }
 
       setUsers(data.data || []);
@@ -31,9 +35,9 @@ export function ManageUsers() {
     }
   };
 
-  // ✅ Delete User
+  // ✅ DELETE USER
   const handleDelete = async (userId: string) => {
-    const confirmDelete = window.confirm("Are you sure to delete?");
+    const confirmDelete = window.confirm("Delete this user?");
     if (!confirmDelete) return;
 
     try {
@@ -43,18 +47,21 @@ export function ManageUsers() {
       );
 
       const res = await fetch(url, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: {
+          ...getAuthHeaderForFormData() // ✅ TOKEN HERE
+        }
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Delete failed");
-        return;
+        throw new Error(data.message || "Delete failed");
       }
 
-      // ✅ Remove user from UI
+      // ✅ Remove from UI instantly
       setUsers((prev) => prev.filter((u) => u.id !== userId));
+
     } catch (err: any) {
       alert(err.message);
     }
@@ -65,74 +72,74 @@ export function ManageUsers() {
   }, []);
 
   return (
-    <div
-      className="p-6 min-h-screen"
-      style={{
-        backgroundColor: theme === "dark" ? "#000" : "#f9fafb",
-        color: theme === "dark" ? "#fff" : "#000"
-      }}
-    >
-      <h2 className="text-2xl font-bold mb-6">All Users</h2>
+    <div className="p-6">
+
+      {/* Title */}
+      <h1 className="text-2xl font-bold mb-6">
+        Manage Users
+      </h1>
 
       {/* Loading */}
       {loading && <p>Loading users...</p>}
 
       {/* Error */}
       {error && (
-        <div className="p-3 mb-4 bg-red-100 text-red-600 rounded">
-          {error}
-        </div>
+        <div className="text-red-500 mb-4">{error}</div>
       )}
 
-      {/* Users Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
         {users.map((user) => (
           <div
             key={user.id}
-            className="p-5 rounded-xl shadow-md border transition hover:shadow-lg"
+            className="p-5 rounded-xl shadow border hover:shadow-lg transition flex flex-col justify-between h-full"
             style={{
-              backgroundColor: theme === "dark" ? "#0a0a0a" : "#fff"
+              backgroundColor: theme === "dark" ? "#0a0a0a" : "#fff",
+              borderColor: "rgba(0,0,0,0.1)"
             }}
           >
             {/* Avatar */}
-            <div className="flex items-center justify-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-cyan-500 flex items-center justify-center text-white text-xl font-bold">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-white font-bold">
                 {user.name?.charAt(0)?.toUpperCase() || "U"}
+              </div>
+
+              <div>
+                <h2 className="font-semibold text-lg">
+                  {user.name || "No Name"}
+                </h2>
+                <p className="text-sm text-gray-400">
+                  {user.email}
+                </p>
               </div>
             </div>
 
             {/* Info */}
-            <div className="text-center space-y-1">
-              <h3 className="text-lg font-semibold">
-                {user.name || "No Name"}
-              </h3>
-              <p className="text-sm text-gray-500">
-                {user.email || "No Email"}
+            <div className="text-sm space-y-2">
+              <p>
+                <strong>Phone:</strong> {user.phone_no || "N/A"}
               </p>
-              <p className="text-sm text-gray-500">
-                {user.phone_no || "No Phone"}
-              </p>
-              <p className="text-sm text-gray-500">
-                {user.address || "No Address"}
+              <p>
+                <strong>Address:</strong> {user.address || "N/A"}
               </p>
             </div>
 
-            {/* Actions */}
-            <div className="mt-4 flex justify-center">
-              <button
-                onClick={() => handleDelete(user.id)}
-                className="px-4 py-2 text-sm rounded bg-red-500 text-white hover:bg-red-600 transition"
-              >
-                Delete
-              </button>
-            </div>
+            {/* Delete Button */}
+            <button
+              onClick={() => handleDelete(user.id)}
+              className="mt-5 w-full py-2 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition"
+            >
+              Delete User
+            </button>
           </div>
         ))}
+
       </div>
 
-      {/* Empty State */}
+      {/* Empty */}
       {!loading && users.length === 0 && (
-        <p className="text-center mt-10 text-gray-500">
+        <p className="text-center text-gray-400 mt-10">
           No users found
         </p>
       )}
