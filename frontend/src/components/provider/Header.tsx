@@ -107,7 +107,7 @@ export function ProviderHeader() {
 
               {/* Menu Items */}
               <Link
-                to="/provider/profile"
+                to="/provider/view-profile"
                 className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-sm"
               >
                 View Profile

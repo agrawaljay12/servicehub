@@ -13,6 +13,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { isAuthenticated, getCurrentUser, clearAuthData } from "../utils/authHelper";
 
+
 const PRIMARY_COLOR = "#0891b2";
 
 export function UserNavigation() {
@@ -52,6 +53,10 @@ export function UserNavigation() {
     clearAuthData();
     setUser(null);
     navigate("/");
+  };
+
+   const handleregister = () => {
+    navigate("/provider/register");
   };
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -113,6 +118,14 @@ export function UserNavigation() {
 
           {/* Right Section */}
           <div className="flex items-center gap-4">
+
+             {/* register button */}
+            <button
+                onClick={handleregister}
+                className="w-full text-left px-4 py-2 hover:bg-blue-700 text-white bg-blue-500 font-bold rounded-lg"
+              >
+                Become Provider
+            </button>
 
             {/* Theme Toggle */}
             <button onClick={toggleTheme}>

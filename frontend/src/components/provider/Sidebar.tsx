@@ -1,10 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 import {
-  FaTachometerAlt,
-  FaUserPlus,
+  // FaUserPlus,
   FaClipboardList,
   FaHistory,
-  FaCheckCircle
+  FaCheckCircle,
+  FaTachometerAlt
 } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -20,11 +20,11 @@ export function ProviderSidebar() {
       path: "/provider/dashboard",
       icon: FaTachometerAlt
     },
-    {
-      name: "Register Service",
-      path: "/provider/register-service",
-      icon: FaUserPlus
-    },
+    // {
+    //   name: "Register Service",
+    //   path: "/provider/register",
+    //   icon: FaUserPlus
+    // },
     {
       name: "Booking Requests",
       path: "/provider/requests",
