@@ -28,7 +28,7 @@ export function PaymentTest() {
 
       // 2️⃣ Razorpay Options
       const options = {
-        key: "rzp_test_SVrWw1p8mwhhJf", // 🔥 Replace with your KEY_ID
+        key: "api_key", // 🔥 Replace with your KEY_ID
         amount: order.amount,
         currency: order.currency,
         order_id: order.id,

@@ -16,7 +16,7 @@ router = APIRouter()
 # SECRET_KEY = os.getenv("RAZORPAY_SECRET_KEY") 
 # API_KEY = os.getenv("RAZORPAY_API_KEY ")
 
-client = razorpay.Client(auth=("rzp_test_SVrWw1p8mwhhJf","eh6oZ4zleKftN40LynuBoHfI"))
+client = razorpay.Client(auth=("api_key","secret_key"))
 
 
 # test route
@@ -59,7 +59,7 @@ async def Verify_Order(data:dict):
     signature = data["razorpay_signature"]
 
     generated_signature = hmac.new(
-        bytes("eh6oZ4zleKftN40LynuBoHfI", "utf-8"),
+        bytes("secret_key", "utf-8"),
         bytes(order_id + "|" + payment_id, "utf-8"),
         hashlib.sha256
     ).hexdigest()
