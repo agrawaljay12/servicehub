@@ -38,24 +38,43 @@ async def create_booking(request:Request,current_user:dict=Depends(get_current_u
 
         if not user_id:
             raise HTTPException(
-                status_code=http_status.NOT_FOUND,
-                detail="User Id is not found"
+                status_code=http_status.UNAUTHORIZED,
+                detail="user is not authenticated"
             )
+        
+        if not service_id:
+            raise HTTPException(
+                status_code=http_status.NOT_FOUND,
+                detail="Service Id is not found"
+            )
+        
         
         service = service_collection.find_one({"_id":ObjectId(service_id)})
 
         # service_id = str(service["_id"])
 
-        if not service_id:
+        if not service:
              raise HTTPException(
                 status_code=http_status.NOT_FOUND,
-                detail="Service Id is not found"
+                detail="Service  is not found"
             )
         
-        provider = provider_collection.find_one({"price":price})
+        provider = provider_collection.find_one({"service_category_id":str(service_id)})
 
-        # convert the price into float
-        price = float(provider["price"])
+        if not provider:
+            raise HTTPException(
+                status_code=http_status.NOT_FOUND,
+                detail="Provider not found"
+            )
+
+        # Get price
+        price = provider.get("price", 0)
+
+        if price <= 0:
+            raise HTTPException(
+                status_code=http_status.BAD_REQUEST,
+                detail="Invalid price"
+            )
 
         # create the razorpay order
         order = client.order.create({
@@ -88,6 +107,9 @@ async def create_booking(request:Request,current_user:dict=Depends(get_current_u
                 "booking_id": str(result.inserted_id)
             }
         )
+    
+    except HTTPException:
+        raise
 
     except Exception as e:
         return response.error_response(
@@ -96,7 +118,7 @@ async def create_booking(request:Request,current_user:dict=Depends(get_current_u
         )
     
 
-    # verify the payment booking 
+# verify the payment booking 
 async def verify_payment(request:Request):
     try:
 
