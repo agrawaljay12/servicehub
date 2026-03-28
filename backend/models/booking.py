@@ -3,6 +3,7 @@ from typing import Optional
 
 class Booking(BaseModel):
     user_id:str
+    provider_id:str
     service_id:str
     price:float
     razorpay_order_id:str

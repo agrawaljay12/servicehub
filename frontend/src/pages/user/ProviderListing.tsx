@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { FaMapMarkerAlt, FaPhone, FaEnvelope, FaStar } from "react-icons/fa";
 import { PROVIDER_ENDPOINTS } from "../../config/provider";
 
+
 declare global {
   interface Window {
     Razorpay: any;
@@ -95,93 +96,92 @@ export function ProviderListing() {
 
   const totalPages = Math.ceil(total / limit);
 
-  // ✅ PAYMENT + BOOKING FUNCTION
-  const handleBooking = async (provider: Provider) => {
-    try {
-      setPayingId(provider._id);
+ 
+ const handleBooking = async (provider: Provider) => {
+  try {
+    setPayingId(provider._id);
 
-      const token = localStorage.getItem("access_token");
+    const token = localStorage.getItem("access_token");
 
-      // 1️⃣ Create Booking (ONLY service_id)
-      const res = await fetch("http://127.0.0.1:8000/api/v1/booking/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          service_id: provider.service_id, // ✅ ONLY THIS
-        }),
-      });
+    // 1️⃣ Create Booking (SEND provider_id ✅)
+    const res = await fetch("http://127.0.0.1:8000/api/v1/booking/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        provider_id: provider._id, // ✅ FIXED
+      }),
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (!data?.data?.order_id) {
-        alert("Order creation failed");
-        return;
-      }
-
-      const { order_id, amount } = data.data;
-
-      const API_KEY = import.meta.env.VITE_RAZORPAY_API_KEY;
-
-      // 2️⃣ Razorpay Options
-      const options = {
-        key: API_KEY,
-        amount: amount,
-        currency: "INR",
-        order_id: order_id,
-
-        name: provider.name,
-        description: "Service Booking",
-
-        handler: async function (response: any) {
-          // 3️⃣ Verify Payment
-          const verifyRes = await fetch(
-            "http://127.0.0.1:8000/api/v1/booking/verify",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                ...response,
-                service_id: provider.service_id, // ✅ store service
-              }),
-            }
-          );
-
-          const verifyData = await verifyRes.json();
-
-          if (verifyData.status === "success") {
-            alert("✅ Booking Confirmed");
-          } else {
-            alert("❌ Payment Failed");
-          }
-        },
-
-        prefill: {
-          name: "User",
-          email: "user@email.com",
-          contact: "9999999999",
-        },
-
-        theme: {
-          color: "#0891b2",
-        },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong");
-    } finally {
-      setPayingId(null);
+    if (!data?.data?.order_id) {
+      alert("Order creation failed");
+      return;
     }
-  };
 
+    const { order_id, amount } = data.data;
+
+    const API_KEY = import.meta.env.VITE_RAZORPAY_API_KEY;
+
+    // 2️⃣ Razorpay Options
+    const options = {
+      key: API_KEY,
+      amount: amount,
+      currency: "INR",
+      order_id: order_id,
+
+      name: provider.name,
+      description: "Service Booking",
+
+      handler: async function (response: any) {
+        // 3️⃣ Verify Payment
+        const verifyRes = await fetch(
+          "http://127.0.0.1:8000/api/v1/booking/verify",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              ...response,
+              provider_id: provider._id, // ✅ IMPORTANT
+            }),
+          }
+        );
+
+        const verifyData = await verifyRes.json();
+
+        if (verifyData.data.status === "success") {
+          alert("✅ Booking Confirmed");
+        } else {
+          alert("❌ Payment Failed");
+        }
+      },
+
+      prefill: {
+        name: "User",
+        email: "user@email.com",
+        contact: "9999999999",
+      },
+
+      theme: {
+        color: "#0891b2",
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong");
+  } finally {
+    setPayingId(null);
+  }
+};
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">
 

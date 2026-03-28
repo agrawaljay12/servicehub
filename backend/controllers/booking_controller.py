@@ -32,7 +32,7 @@ async def create_booking(request:Request,current_user:dict=Depends(get_current_u
 
         # load the data from request body
         data = await request.json()
-        service_id = data.get("service_id")
+        provider_id = data.get("provider_id")
 
         user_id = str(current_user.get("user_id")) 
 
@@ -42,38 +42,45 @@ async def create_booking(request:Request,current_user:dict=Depends(get_current_u
                 detail="user is not authenticated"
             )
         
-        if not service_id:
+        if not provider_id:
             raise HTTPException(
                 status_code=http_status.NOT_FOUND,
-                detail="Service Id is not found"
+                detail="provider id is not found"
             )
         
         
-        service = service_collection.find_one({"_id":ObjectId(service_id)})
-
-        # service_id = str(service["_id"])
-
-        if not service:
-             raise HTTPException(
-                status_code=http_status.NOT_FOUND,
-                detail="Service  is not found"
-            )
-        
-        provider = provider_collection.find_one({"service_category_id":str(service_id)})
+        provider = provider_collection.find_one({"_id":ObjectId(provider_id)})
 
         if not provider:
-            raise HTTPException(
+             raise HTTPException(
                 status_code=http_status.NOT_FOUND,
-                detail="Provider not found"
+                detail="provider is not found"
             )
+        
+        service_id = provider["service_category_id"]
+        price = float(provider.get("price",0))
 
-        # Get price
-        price = provider.get("price", 0)
+        if not service_id:
+            raise HTTPException(
+                status_code=http_status.BAD_REQUEST,
+                detail="Service ID missing in provider"
+            )
 
         if price <= 0:
             raise HTTPException(
                 status_code=http_status.BAD_REQUEST,
                 detail="Invalid price"
+            )
+        
+        #  Validate service exists
+        service = service_collection.find_one({
+            "_id": ObjectId(service_id)
+        })
+
+        if not service:
+            raise HTTPException(
+                status_code=http_status.NOT_FOUND,
+                detail="Service not found"
             )
 
         # create the razorpay order
@@ -81,16 +88,15 @@ async def create_booking(request:Request,current_user:dict=Depends(get_current_u
             "amount":int(price*100),
             "currency":"INR",
             "receipt":user_id
-        })
-        
-        booking_date = datetime.utcnow()
+        })     
 
         booking_data = {
             "user_id": user_id,
-            "service_id": service_id,
+            "provider_id":provider_id,
+            "service_id": str(service_id),
             "price": price,
             "razorpay_order_id": order["id"],
-            "booking_date": booking_date,
+            "booking_date":datetime.utcnow(),
             "payment_status": "pending",
             "booking_status": "pending"
         }
@@ -161,7 +167,11 @@ async def verify_payment(request:Request):
             return response.success_response(
                 status=http_status.OK,
                 message=f"Your payment is successful",
-                data=result
+                data={
+                    "order_id": order_id,
+                    "payment_id": payment_id,
+                    "status": "success"
+                }
             )
 
 
