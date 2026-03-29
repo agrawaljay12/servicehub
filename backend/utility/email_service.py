@@ -4,6 +4,7 @@ from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 import logging
 import os
+from typing import Optional,List
 
 load_dotenv()
 

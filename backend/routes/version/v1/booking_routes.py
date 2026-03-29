@@ -36,5 +36,5 @@ async def Create_Order(request:Request,current_user: dict = Depends(get_current_
 # METHOD:POST
 # description: create booking 
 @router.post('/verify',response_description="Verify Booking")
-async def Verify_Order(request:Request):
-    return await verify_payment(request)
+async def Verify_Order(request:Request, current_user: dict = Depends(get_current_user)):
+    return await verify_payment(request,current_user)

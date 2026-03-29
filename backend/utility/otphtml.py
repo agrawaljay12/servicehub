@@ -1,3 +1,6 @@
+from typing import Optional,List
+
+
 def otp_template(otp):
     return f"""
     <html>
@@ -9,7 +12,7 @@ def otp_template(otp):
     """
 
 # send the dynamic message to user 
-def message_template(message,username:str,):
+def message_template(message,username:Optional[List[str]]):
     return f"""
     <html>
         <body>

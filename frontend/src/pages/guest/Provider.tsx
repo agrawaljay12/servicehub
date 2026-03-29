@@ -28,6 +28,8 @@ export function GuestProviderListing() {
 
   const [loading, setLoading] = useState(false);
 
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
   // ✅ Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -175,10 +177,54 @@ export function GuestProviderListing() {
                 <FaEnvelope /> {p.email}
               </p>
             </div>
-          </div>
-        ))}
+            
+            <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="mt-4 w-full bg-cyan-600 text-white py-2 rounded-lg hover:bg-cyan-700"
+                >
+                  Book Service
+            </button>
 
+          </div>
+        ))}            
       </div>
+
+    {/* login popup */}
+    {showLoginModal && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        
+        <div className="bg-white rounded-xl p-6 w-96 text-center shadow-lg">
+
+          <h2 className="text-xl font-semibold mb-3">
+            Login Required 🔐
+          </h2>
+
+          <p className="text-gray-600 mb-6">
+            Please login to book this service.
+          </p>
+
+          <div className="flex gap-3 justify-center">
+            
+            {/* Login Button */}
+            <button
+              onClick={() => window.location.href = "/auth/signin"}
+              className="bg-cyan-600 text-white px-4 py-2 rounded-lg hover:bg-cyan-700"
+            >
+              Go to Login
+            </button>
+
+            {/* Cancel Button */}
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="border px-4 py-2 rounded-lg hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+
+          </div>
+        </div>
+      </div>
+    )}
 
       {/* 📄 Pagination */}
       <div className="flex justify-center items-center gap-2 mt-8 flex-wrap">

@@ -137,24 +137,24 @@ export function ProviderListing() {
       description: "Service Booking",
 
       handler: async function (response: any) {
-        // 3️⃣ Verify Payment
+
         const verifyRes = await fetch(
           "http://127.0.0.1:8000/api/v1/booking/verify",
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`, // ✅ REQUIRED
             },
             body: JSON.stringify({
               ...response,
-              provider_id: provider._id, // ✅ IMPORTANT
             }),
           }
         );
 
         const verifyData = await verifyRes.json();
 
-        if (verifyData.data.status === "success") {
+        if (verifyData?.data?.status === "success") {
           alert("✅ Booking Confirmed");
         } else {
           alert("❌ Payment Failed");

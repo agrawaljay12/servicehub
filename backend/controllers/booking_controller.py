@@ -126,17 +126,23 @@ async def create_booking(request:Request,current_user:dict=Depends(get_current_u
     
 
 # verify the payment booking 
-async def verify_payment(request:Request):
+async def verify_payment(request:Request,current_user:dict=Depends(get_current_user)):
     try:
 
         # load the data from request body
         data = await request.json()
 
-        user_id = data.get("user_id")
+        user_id = str(current_user.get("user_id"))
+        name = current_user.get("name")
+        user_email = current_user.get("email")
+
         
         razorpay_order_id = data.get("razorpay_order_id")
         razorpay_payment_id = data.get("razorpay_payment_id")
         razorpay_signature = data.get("razorpay_signature")
+
+        if not user_id:
+            raise HTTPException(status_code=http_status.UNAUTHORIZED,detail="User is Unauthorized")
 
         if not razorpay_order_id or not razorpay_payment_id or not razorpay_signature:
             raise HTTPException(status_code=400, detail="Missing payment data")
@@ -162,18 +168,49 @@ async def verify_payment(request:Request):
             "booking_status":"confirmed",
             "payment_date":datetime.utcnow()
         }
-
+        
+        # get booking  
         booking = booking_collection.find_one({"razorpay_order_id":razorpay_order_id})
+
+        if not booking:
+            raise HTTPException(status_code=http_status.NOT_FOUND,detail="booking is not found")
 
         user = user_collection.find_one({"_id":ObjectId(booking["user_id"])})
 
         email = user["email"]   
+        name = user["name"]
 
-        email_body= message_template(username=user["name"], message=f"is your service confirmed")      
+        # Fetch provider
+        provider = provider_collection.find_one({"_id": ObjectId(booking["provider_id"])})
+
+        if not provider:
+            raise HTTPException(status_code=404, detail="Provider not found")
+        
+        provider_user = user_collection.find_one({"_id": ObjectId(provider["user_id"])})
+
+        provider_email = provider_user.get("email")
+        provider_name = provider_user.get("name")
+
+         # Fetch service
+        service = service_collection.find_one({"_id": ObjectId(booking["service_id"])})
+        service_name = service.get("service_name")
+
+          # Email content
+        user_email_body = message_template(
+            username=name,
+            message=f"Your booking for {service_name} is confirmed."
+        )
+
+        provider_email_body = message_template(
+            username=provider_name,
+            message=f"You have a new booking for {service_name}."
+        )
 
         result = booking_collection.update_one({"razorpay_order_id":razorpay_order_id},{"$set":booking_data})
 
-        send_email(to_email=email,subject="Booking Confirmation",body=email_body)
+         # Send emails
+        send_email(to_email=user_email, subject="Booking Confirmation", body=user_email_body)
+        send_email(to_email=provider_email, subject="New Booking Received", body=provider_email_body)
 
 
         if result.modified_count==1:
