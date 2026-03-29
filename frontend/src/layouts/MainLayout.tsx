@@ -23,6 +23,7 @@ import { ProviderViewProfile } from "../pages/provider/ViewProfile";
 import { ProviderLayout } from "./ProviderLayout";
 import { UserProtectedRoute } from "../pages/user/UserProtetedRoute";
 import { PaymentTest } from "../PaymentIntegration/PaymentIntegration";
+import { BookingHistory } from "../pages/user/Booking_History";
 
 export const MainLayout = () => {
   return (
@@ -47,6 +48,7 @@ export const MainLayout = () => {
             <Route path="/user/change-password" element={<ChangePassword/>} />
             <Route path="/user/view-profile" element={<ViewProfile/>} />
             <Route path="/user/edit-profile" element={<EditProfile/>} />
+            <Route path="/user/booking-history" element={<BookingHistory/>} />
         </Route>       
       
         {/* Admin Routes */}

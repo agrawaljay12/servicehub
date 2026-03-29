@@ -173,7 +173,7 @@ export function UserNavigation() {
                     Change Password
                   </Link>
 
-                  <Link to="/user/bookings" className="block px-4 py-2 hover:bg-gray-100">
+                  <Link to="/user/booking-history" className="block px-4 py-2 hover:bg-gray-100">
                     Booking History
                   </Link>
 

@@ -36,6 +36,7 @@ export function ProviderListing() {
 
   const [loading, setLoading] = useState(false);
   const [payingId, setPayingId] = useState<string | null>(null);
+  const[, setPaymentStatus] = useState<string | null>(null);
 
   // ✅ Debounce Search
   useEffect(() => {
@@ -136,30 +137,34 @@ export function ProviderListing() {
       name: provider.name,
       description: "Service Booking",
 
-      handler: async function (response: any) {
+    handler: async function (response: any) {
+          try {
+            setPaymentStatus("verifying");
 
-        const verifyRes = await fetch(
-          "http://127.0.0.1:8000/api/v1/booking/verify",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`, // ✅ REQUIRED
-            },
-            body: JSON.stringify({
-              ...response,
-            }),
+            const verifyRes = await fetch(
+              "http://127.0.0.1:8000/api/v1/booking/verify",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(response),
+              }
+            );
+
+            const verifyData = await verifyRes.json();
+
+            if (verifyData?.data?.status === "success") {
+              setPaymentStatus("success");
+            } else {
+              setPaymentStatus("failed");
+            }
+
+          } catch (err) {
+            setPaymentStatus("error");
           }
-        );
-
-        const verifyData = await verifyRes.json();
-
-        if (verifyData?.data?.status === "success") {
-          alert("✅ Booking Confirmed");
-        } else {
-          alert("❌ Payment Failed");
-        }
-      },
+        },
 
       prefill: {
         name: "User",

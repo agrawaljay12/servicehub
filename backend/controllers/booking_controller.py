@@ -1,3 +1,4 @@
+from fastapi.encoders import jsonable_encoder
 from config.db import db
 from core import response, http_status
 from core.dependency import get_current_user
@@ -11,6 +12,7 @@ import razorpay
 import hmac
 import hashlib
 from datetime import datetime
+from pymongo import DESCENDING, ASCENDING
 
 load_dotenv()
 
@@ -97,7 +99,7 @@ async def create_booking(request:Request,current_user:dict=Depends(get_current_u
             "service_id": str(service_id),
             "price": price,
             "razorpay_order_id": order["id"],
-            "booking_date":datetime.utcnow(),
+            "booking_date":datetime.utcnow().isoformat(),
             "payment_status": "pending",
             "booking_status": "pending"
         }
@@ -166,7 +168,7 @@ async def verify_payment(request:Request,current_user:dict=Depends(get_current_u
             "razorpay_signature":razorpay_signature,
             "payment_status":"success",
             "booking_status":"confirmed",
-            "payment_date":datetime.utcnow()
+            "payment_date":datetime.utcnow().isoformat()
         }
         
         # get booking  
@@ -228,5 +230,191 @@ async def verify_payment(request:Request,current_user:dict=Depends(get_current_u
     except Exception as e:
         return response.error_response(
             status=http_status.INTERNAL_SERVER_ERROR,
+            message=str(e)
+        )
+
+
+async def fetch_booking(request: Request, current_user: dict = Depends(get_current_user)):
+    try:
+        params = request.query_params
+        search = params.get("search", "")
+        sort_by = params.get("sort_by", "booking_date")
+        sort_order = int(params.get("sort_order", 1))
+        page = int(params.get("page", 1))
+        limit = int(params.get("limit", 12))
+
+        user_id = str(current_user.get("user_id"))
+
+        if not user_id:
+            raise HTTPException(status_code=401, detail="User not authenticated")
+
+        skip = (page - 1) * limit
+        sort_direction = 1 if sort_order == 1 else -1
+
+        # ---------------- BASE PIPELINE ---------------- #
+        base_pipeline = [
+
+            # ✅ MATCH USER BOOKINGS
+            {
+                "$match": {
+                    "user_id": user_id
+                }
+            },
+
+            # ✅ SAFE OBJECT ID CONVERSION
+            {
+                "$addFields": {
+                    "provider_id_obj": {
+                        "$cond": [
+                            {"$and": [
+                                {"$ne": ["$provider_id", None]},
+                                {"$ne": ["$provider_id", ""]}
+                            ]},
+                            {"$toObjectId": "$provider_id"},
+                            None
+                        ]
+                    },
+                    "service_id_obj": {
+                        "$cond": [
+                            {"$and": [
+                                {"$ne": ["$service_id", None]},
+                                {"$ne": ["$service_id", ""]}
+                            ]},
+                            {"$toObjectId": "$service_id"},
+                            None
+                        ]
+                    }
+                }
+            },
+
+            # ---------------- PROVIDER LOOKUP ---------------- #
+            {
+                "$lookup": {
+                    "from": "providers",
+                    "localField": "provider_id_obj",
+                    "foreignField": "_id",
+                    "as": "provider"
+                }
+            },
+            {
+                "$unwind": {
+                    "path": "$provider",
+                    "preserveNullAndEmptyArrays": True
+                }
+            },
+
+            # ✅ CONVERT provider.user_id → ObjectId
+            {
+                "$addFields": {
+                    "provider_user_id_obj": {
+                        "$cond": [
+                            {"$and": [
+                                {"$ne": ["$provider.user_id", None]},
+                                {"$ne": ["$provider.user_id", ""]}
+                            ]},
+                            {"$toObjectId": "$provider.user_id"},
+                            None
+                        ]
+                    }
+                }
+            },
+
+            # ---------------- PROVIDER USER LOOKUP ---------------- #
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "provider_user_id_obj",
+                    "foreignField": "_id",
+                    "as": "provider_user"
+                }
+            },
+            {
+                "$unwind": {
+                    "path": "$provider_user",
+                    "preserveNullAndEmptyArrays": True
+                }
+            },
+
+            # ---------------- SERVICE LOOKUP ---------------- #
+            {
+                "$lookup": {
+                    "from": "service_category",
+                    "localField": "service_id_obj",
+                    "foreignField": "_id",
+                    "as": "service"
+                }
+            },
+            {
+                "$unwind": {
+                    "path": "$service",
+                    "preserveNullAndEmptyArrays": True
+                }
+            }
+        ]
+
+        # ---------------- SEARCH ---------------- #
+        if search:
+            base_pipeline.append({
+                "$match": {
+                    "$or": [
+                        {"provider_user.name": {"$regex": search, "$options": "i"}},
+                        {"service.service_name": {"$regex": search, "$options": "i"}},
+                        {"booking_status": {"$regex": search, "$options": "i"}},
+                        {"payment_status": {"$regex": search, "$options": "i"}}
+                    ]
+                }
+            })
+
+        # ---------------- DATA PIPELINE ---------------- #
+        data_pipeline = base_pipeline + [
+            {"$sort": {sort_by: sort_direction}},
+            {"$skip": skip},
+            {"$limit": limit}
+        ]
+
+        bookings = list(booking_collection.aggregate(data_pipeline))
+
+        # ---------------- COUNT PIPELINE ---------------- #
+        count_pipeline = base_pipeline + [
+            {"$count": "total"}
+        ]
+
+        total_result = list(booking_collection.aggregate(count_pipeline))
+        total_bookings = total_result[0]["total"] if total_result else 0
+
+        # ---------------- FORMAT RESPONSE ---------------- #
+        booking_data = []
+
+        for b in bookings:
+            booking_data.append({
+                "booking_id": str(b["_id"]),
+                "provider_name": b.get("provider_user", {}).get("name") or "N/A",
+                "service_name": b.get("service", {}).get("service_name") or "N/A",
+                "price": b.get("price"),
+                "booking_status": b.get("booking_status"),
+                "payment_status": b.get("payment_status"),
+                "payment_date": b.get("payment_date"),
+                "booking_date": b.get("booking_date"),
+            })
+
+        total_pages = (total_bookings + limit - 1) // limit
+
+        return response.success_response(
+            status=200,
+            message="Booking data retrieved",
+            data=jsonable_encoder({
+                "bookings": booking_data,
+                "pagination": {
+                    "total_bookings": total_bookings,
+                    "total_pages": total_pages,
+                    "current_page": page,
+                    "limit": limit
+                }
+            })
+        )
+
+    except Exception as e:
+        return response.error_response(
+            status=500,
             message=str(e)
         )
