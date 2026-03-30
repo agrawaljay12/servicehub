@@ -86,7 +86,7 @@ export function ServiceListing() {
   };
 
   const handleBookService = (service: Service) => {
-    navigate(`/user/providers?service=${encodeURIComponent(service.service_name)}`);
+    navigate(`/user/providers?service_id=${service._id}`);
   };
 
   // Theme styles
@@ -291,7 +291,7 @@ export function ServiceListing() {
               {/* CTA Button */}
               <button
                 onClick={() => {
-                  navigate(`/user/providers?service=${encodeURIComponent(selectedService.service_name)}`);
+                  navigate(`/user/providers?service_id=${selectedService._id}`);
                   handleCloseDetail();
                 }}
                 className="w-full px-6 py-3 rounded-lg font-bold transition-all hover:shadow-lg"

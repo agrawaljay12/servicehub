@@ -88,15 +88,24 @@ async def get_all_approved_Provider(request: Request):
         limit = max(int(data.get("limit") or params.get("limit") or 12), 1)
         skip = (page - 1) * limit
 
-        # -------- Filtering -------- #
-        query_filter = {"provider_status": "approved"}
+        service_id = (data.get("service_id") or params.get("service_id") or "").strip()
 
-        if location or description:
-            search_value = location or description
-            query_filter["$or"] = [
-                {"location": {"$regex": search_value, "$options": "i"}},
-                {"description": {"$regex": search_value, "$options": "i"}}
-            ]
+        # -------- Validate service_id -------- #
+        service_object_id = None
+        if service_id:
+            try:
+                service_object_id = ObjectId(service_id)
+            except:
+                return response.success_response(
+                    message="Invalid service_id",
+                    data={
+                        "providers": [],
+                        "total": 0,
+                        "page": page,
+                        "limit": limit
+                    },
+                    status=http_status.OK
+                )
 
         # -------- Sorting -------- #
         allowed_sort_fields = ["price", "rating", "experience"]
@@ -105,11 +114,57 @@ async def get_all_approved_Provider(request: Request):
 
         sort_direction = ASCENDING if sort_order == "asc" else DESCENDING
 
+        # -------- Base Match -------- #
+        match_stage = {
+            "provider_status": "approved"
+        }
+
+        # 🔍 Search Filter
+        if location or description:
+            search_value = location or description
+            match_stage["$or"] = [
+                {"location": {"$regex": search_value, "$options": "i"}},
+                {"description": {"$regex": search_value, "$options": "i"}}
+            ]
+
         # -------- Aggregation Pipeline -------- #
         pipeline = [
-            {"$match": query_filter},
+            {"$match": match_stage},
 
-            # convert user_id (string → ObjectId)
+            {
+                "$addFields": {
+                    "service_id_clean": {
+                        "$trim": { "input": "$service_id" }
+                    }
+                }
+            },
+
+
+            # ✅ SAFE CONVERSION
+            {
+                "$addFields": {
+                    "service_id_obj": {
+                        "$convert": {
+                            "input": "$service_id_clean",
+                            "to": "objectId",
+                            "onError": None,
+                            "onNull": None
+                        }
+                    }
+                }
+            }
+        ]
+
+        if service_object_id:
+            pipeline.append({
+                "$match": {
+                    "service_id_obj": service_object_id
+                }
+            })
+
+        pipeline.extend([
+
+            # user conversion
             {
                 "$addFields": {
                     "user_id_obj": {
@@ -123,7 +178,7 @@ async def get_all_approved_Provider(request: Request):
                 }
             },
 
-            # join with users collection
+            # user lookup
             {
                 "$lookup": {
                     "from": "users",
@@ -132,10 +187,19 @@ async def get_all_approved_Provider(request: Request):
                     "as": "user_details"
                 }
             },
-
             {"$unwind": {"path": "$user_details", "preserveNullAndEmptyArrays": True}},
 
-            # -------- FACET (data + total count) -------- #
+            
+            {
+                "$lookup": {
+                    "from": "service_category",
+                    "localField": "service_id_obj",
+                    "foreignField": "_id",
+                    "as": "service_details"
+                }
+            },
+            {"$unwind": {"path": "$service_details", "preserveNullAndEmptyArrays": True}},
+
             {
                 "$facet": {
                     "data": [
@@ -150,21 +214,21 @@ async def get_all_approved_Provider(request: Request):
                                 "rating": 1,
                                 "location": 1,
                                 "experience": 1,
-
-                                # user data
                                 "name": "$user_details.name",
                                 "email": "$user_details.email",
-                                "phone_no": "$user_details.phone_no"
+                                "phone_no": "$user_details.phone_no",
+                                "service_name": "$service_details.name",
+                                "service_id": 1,
+                                "service_id_obj": 1
                             }
                         }
                     ],
-                    "total": [
-                        {"$count": "count"}
-                    ]
+                    "total": [{"$count": "count"}]
                 }
             }
-        ]
+        ])
 
+        # -------- Execute -------- #
         result = list(provider_collection.aggregate(pipeline))
 
         providers = result[0]["data"] if result else []

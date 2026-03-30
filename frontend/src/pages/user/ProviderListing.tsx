@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { FaMapMarkerAlt, FaPhone, FaEnvelope, FaStar } from "react-icons/fa";
 import { PROVIDER_ENDPOINTS } from "../../config/provider";
+import { useSearchParams } from "react-router-dom";
 
 
 declare global {
@@ -38,6 +39,9 @@ export function ProviderListing() {
   const [payingId, setPayingId] = useState<string | null>(null);
   const[, setPaymentStatus] = useState<string | null>(null);
 
+  const [searchParams] = useSearchParams();
+  const service_id = searchParams.get("service_id"); // 🔥 important
+
   // ✅ Debounce Search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -52,27 +56,44 @@ export function ProviderListing() {
   useEffect(() => {
     const fetchProviders = async () => {
       setLoading(true);
-      try {
-        const query = new URLSearchParams({
-          page: String(page),
-          limit: String(limit),
-          sort_by: sortField,
-          sort_order: sortOrder,
-        });
 
-        if (debouncedSearch.trim()) {
-          query.append("location", debouncedSearch);
-          query.append("description", debouncedSearch);
+      try {
+        const query = new URLSearchParams();
+
+        query.append("page", String(page));
+        query.append("limit", String(limit));
+        query.append("sort_by", sortField);
+        query.append("sort_order", sortOrder);
+
+        // ✅ FIX: Strong validation
+        if (
+          service_id &&
+          service_id !== "null" &&
+          service_id !== "undefined" &&
+          service_id.length === 24
+        ) {
+          query.append("service_id", service_id);
         }
 
-        const res = await fetch(`${PROVIDER_ENDPOINTS.fetchAll}?${query}`);
+        // ✅ Clean search
+        if (debouncedSearch.trim()) {
+          query.append("location", debouncedSearch);
+        }
+
+        const url = `${PROVIDER_ENDPOINTS.fetchAll}?${query.toString()}`;
+
+        console.log("🔥 API URL:", url);
+
+        const res = await fetch(url);
         const data = await res.json();
+
+        console.log("🔥 API RESPONSE:", data);
 
         const list = data?.data?.providers || [];
 
         const mapped = list.map((p: any) => ({
           _id: p._id,
-          service_id: p.service_id, 
+          service_id: p.service_id,
           name: p.name || "Unknown",
           email: p.email || "N/A",
           phone: p.phone_no || "N/A",
@@ -85,15 +106,21 @@ export function ProviderListing() {
 
         setProviders(mapped);
         setTotal(data?.data?.total || 0);
+
       } catch (err) {
-        console.error(err);
+        console.error("❌ Fetch Error:", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProviders();
-  }, [page, sortField, sortOrder, debouncedSearch]);
+  }, [page, sortField, sortOrder, debouncedSearch, service_id]);
+
+  // when the service_id changes, we should reset to page 1 to show relevant results
+  useEffect(() => {
+    setPage(1);
+  }, [service_id]);
 
   const totalPages = Math.ceil(total / limit);
 
@@ -191,6 +218,13 @@ export function ProviderListing() {
     <div className="max-w-7xl mx-auto px-6 py-8">
 
       <h1 className="text-3xl font-bold mb-6">Service Providers</h1>
+
+      {service_id && (
+        <h2 className="text-lg text-gray-500 mb-4">
+          Showing providers for:{" "}
+          <span className="font-semibold">{service_id}</span>
+        </h2>
+      )}
 
       {/* 🔍 Filters */}
       <div className="grid md:grid-cols-3 gap-4 mb-6">
