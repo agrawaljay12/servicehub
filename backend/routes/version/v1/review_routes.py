@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request,Depends
 from core import http_status
 from core import response 
 from core.dependency import get_current_user
-from controllers.review_controller import create_review
+from controllers.review_controller import create_review,get_all_review_by_provider
 
 router = APIRouter()
 
@@ -27,3 +27,12 @@ async def booking_home():
 @router.post('/create',response_description="Create Review")
 async def Create_Review(request:Request,current_user: dict = Depends(get_current_user)):
     return await create_review(request,current_user)
+
+
+# URL:http://127.0.0.1:8000/api/v1/reviews/fetch/provider/{provider_id}
+# METHOD:GET 
+# description: get all reviews for a provider by provider id
+
+@router.get('/fetch/provider/{provider_id}',response_description="Fetch Reviews by Provider")
+async def Fetch_Reviews_By_Provider(provider_id: str):
+    return await get_all_review_by_provider(provider_id)

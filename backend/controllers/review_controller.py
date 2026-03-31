@@ -11,6 +11,7 @@ from datetime import datetime
 review_collection = db["reviews"]
 booking_collection = db["booking"]
 provider_collection = db["providers"]
+user_collection = db["users"]
 
 async def create_review(request:Request, current_user: dict =Depends(get_current_user)):
      try: 
@@ -111,4 +112,59 @@ async def create_review(request:Request, current_user: dict =Depends(get_current
         return response.error_response( 
             status=http_status.INTERNAL_SERVER_ERROR, 
             message=str(e) 
+        )
+
+
+# list all reviews for a provider
+async def get_all_review_by_provider(provider_id:str):
+    try:
+        
+        if not provider_id:
+            raise HTTPException(status_code=http_status.BAD_REQUEST, detail="Provider ID is required")
+        
+        provider = provider_collection.find_one({"_id": ObjectId(provider_id)})
+
+        if not provider:
+            raise HTTPException(status_code=http_status.NOT_FOUND, detail="Provider not found")
+        
+        user = user_collection.find_one({"role":"user"}) 
+
+        if user:
+            user_id = str(user["_id"])
+            user_name = user.get("name", "Unknown User")
+        else:
+            user_id = None
+            user_name = "Unknown User"
+            raise HTTPException(status_code=http_status.NOT_FOUND, detail="User not found")
+        
+        reviews = review_collection.find({"provider_id": provider_id})
+
+        review_list = []
+
+        for review in reviews:
+            review["_id"] = str(review["_id"])
+
+            review_list.append({
+                "user_id": user_id,
+                "user_name": user_name,
+                "provider_id": provider_id,
+                "rating": review.get("rating"),
+                "comment": review.get("comment"),
+                "created_at": review.get("created_at")
+            } )
+
+        return response.success_response(
+            status=http_status.OK,
+            message="Reviews retrieved successfully",
+            data=review_list
+        )
+        
+    # re raise the http exception if it occurs
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        return response.error_response(
+            status=http_status.BAD_REQUEST,
+            message=str(e)
         )
