@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState ,useEffect} from "react";
 import { getAuthHeader } from "../../utils/authHelper";
 import { type Booking } from "./Booking_History";
 
@@ -17,6 +17,7 @@ export function ReviewModal({
   const [error, setError] = useState<string | null>(null);
 
   const submitReview = async () => {
+    if (loading) return;
     setError(null);
 
     // ✅ FRONTEND VALIDATION (MATCH BACKEND)
@@ -63,12 +64,12 @@ export function ReviewModal({
       }
 
       if (!res.ok) {
-        setError(data?.detail || "Failed to submit review");
+        setError(data?.detail || data?.message || "Failed to submit review");
         return;
       }
 
       // ✅ SUCCESS
-      alert("Review submitted successfully ✅");
+      // alert("Review submitted successfully ✅");
 
       onSuccess(); // refresh booking list
       onClose();   // close modal
@@ -80,6 +81,12 @@ export function ReviewModal({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    setRating(0);
+    setComment("");
+    setError(null);
+  }, [booking]);
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">

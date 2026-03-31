@@ -419,6 +419,7 @@ async def fetch_booking(request: Request, current_user: dict = Depends(get_curre
         for b in bookings:
             booking_data.append({
                 "booking_id": str(b["_id"]),
+                "provider_id": b.get("provider_id"),  
                 "provider_name": b.get("provider_user", {}).get("name") or "N/A",
                 "service_name": b.get("service", {}).get("service_name") or "N/A",
                 "price": b.get("price"),
@@ -426,6 +427,7 @@ async def fetch_booking(request: Request, current_user: dict = Depends(get_curre
                 "payment_status": b.get("payment_status"),
                 "payment_date": b.get("payment_date"),
                 "booking_date": b.get("booking_date"),
+                "has_review": b.get("has_review", False)
             })
 
         total_pages = (total_bookings + limit - 1) // limit

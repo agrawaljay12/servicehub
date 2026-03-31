@@ -33,6 +33,7 @@ export function BookingHistory() {
 
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+ 
 
   // ✅ debounce search
   useEffect(() => {
@@ -210,7 +211,11 @@ export function BookingHistory() {
             </div>
 
             {/* review button */}
-            {b.booking_status === "completed" && !b.has_review && (
+           {b.has_review ? (
+                <span className="text-green-600 text-sm mt-4 block">
+                  Reviewed
+                </span>
+              ) : (
                 <button
                   onClick={() => handleReview(b)}
                   className="mt-4 w-full bg-cyan-600 text-white py-2 rounded hover:bg-cyan-700"
@@ -218,6 +223,12 @@ export function BookingHistory() {
                   Write Review
                 </button>
             )}
+            {/* disabled review button
+            {b.has_review ? (
+                <span className="text-gray-500">Reviewed</span>
+              ) : (
+                <button>Write Review</button>
+              )} */}
 
           </div>
         ))}
@@ -263,8 +274,17 @@ export function BookingHistory() {
           booking={selectedBooking}
           onClose={() => setShowReviewModal(false)}
           onSuccess={() => {
-            // 🔄 refresh bookings after review
-            setPage(1);
+            if (selectedBooking) {
+              setBookings((prev) =>
+                prev.map((b) =>
+                  b.booking_id === selectedBooking.booking_id
+                    ? { ...b, has_review: true }
+                    : b
+                )
+              );
+            }
+
+            setShowReviewModal(false);
           }}
         />
       )}

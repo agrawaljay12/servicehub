@@ -48,7 +48,7 @@ async def create_review(request:Request, current_user: dict =Depends(get_current
             raise HTTPException(status_code=http_status.BAD_REQUEST, detail="Invalid booking or booking not completed") 
         
         # check if review already exists for this booking
-        review = review_collection.find_one({"booking_id": str(booking_id)}) 
+        review = review_collection.find_one({"booking_id": booking_id}) 
         
         if review:
              raise HTTPException(status_code=http_status.BAD_REQUEST, detail="Review already exists for this booking")
@@ -64,7 +64,7 @@ async def create_review(request:Request, current_user: dict =Depends(get_current
             ) 
         
         # insert the review into the database
-        result = review_collection.insert_one(review_data.dict()) 
+        insert_review = review_collection.insert_one(review_data.dict()) 
         
         # Recalculate average rating 
         pipeline = [
@@ -79,18 +79,29 @@ async def create_review(request:Request, current_user: dict =Depends(get_current
         ]
 
         # execute the aggregation pipeline to calculate average rating and total reviews for the provider
-        result = list(review_collection.aggregate(pipeline))
+        agg_result = list(review_collection.aggregate(pipeline))
 
-        avg_rating = result[0]["avg_rating"] if result else 0
-        total_reviews = result[0]["total_reviews"] if result else 0
+        avg_rating = agg_result[0]["avg_rating"] if agg_result else 0
+        total_reviews = agg_result[0]["total_reviews"] if agg_result else 0
         
         # Update provider document with the new average rating and total reviews
-        provider_collection.update_one( {"_id": ObjectId(provider_id)}, { "$set": { "avg_rating": round(avg_rating, 1), "total_reviews": total_reviews } } ) 
+        try:
+            provider_collection.update_one(
+                {"_id": ObjectId(provider_id)},
+                {
+                    "$set": {
+                        "avg_rating": round(avg_rating, 1),
+                        "total_reviews": total_reviews
+                    }
+                }
+            )
+        except Exception as e:
+            print("Rating update failed:", e)
         
         return response.success_response( 
             status=http_status.CREATED,
-            detail="Review created successfully", 
-            data={"review_id": str(result.inserted_id)} 
+            message="Review created successfully", 
+            data={"review_id": str(insert_review.inserted_id)} 
         ) 
      
      except HTTPException: 
@@ -99,5 +110,5 @@ async def create_review(request:Request, current_user: dict =Depends(get_current
      except Exception as e: 
         return response.error_response( 
             status=http_status.INTERNAL_SERVER_ERROR, 
-            detail=str(e) 
+            message=str(e) 
         )
