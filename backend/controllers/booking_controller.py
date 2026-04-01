@@ -474,10 +474,17 @@ async def fetch_provider_booking(
         if current_user.get("role") != "provider":
             raise HTTPException(status_code=403, detail="Access denied")
 
-        provider_id = str(current_user.get("user_id"))
+        user_id = str(current_user.get("user_id"))
 
         if not provider_id:
             raise HTTPException(status_code=401, detail="Unauthorized")
+
+        provider = provider_collection.find_one({ "user_id": user_id})
+
+        if not provider:
+            raise HTTPException(status_code=404, detail="Provider not found")
+
+        provider_id = str(provider["_id"])
 
         skip = (page - 1) * limit
         sort_direction = 1 if sort_order == 1 else -1
