@@ -12,7 +12,7 @@ import razorpay
 import hmac
 import hashlib
 from datetime import datetime
-from pymongo import DESCENDING, ASCENDING
+
 
 load_dotenv()
 
@@ -435,6 +435,189 @@ async def fetch_booking(request: Request, current_user: dict = Depends(get_curre
         return response.success_response(
             status=200,
             message="Booking data retrieved",
+            data=jsonable_encoder({
+                "bookings": booking_data,
+                "pagination": {
+                    "total_bookings": total_bookings,
+                    "total_pages": total_pages,
+                    "current_page": page,
+                    "limit": limit
+                }
+            })
+        )
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        return response.error_response(
+            status=500,
+            message=str(e)
+        )
+
+# get provider booking 
+async def fetch_provider_booking(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    try:
+        params = request.query_params
+
+        search = params.get("search", "")
+        sort_by = params.get("sort_by", "booking_date")
+        sort_order = int(params.get("sort_order", -1))
+        page = int(params.get("page", 1))
+        limit = int(params.get("limit", 12))
+        status_filter = params.get("status", "confirmed")
+
+        # ✅ ROLE CHECK (IMPORTANT)
+        if current_user.get("role") != "provider":
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        provider_id = str(current_user.get("user_id"))
+
+        if not provider_id:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+
+        skip = (page - 1) * limit
+        sort_direction = 1 if sort_order == 1 else -1
+
+        allowed_status = ["pending", "confirmed", "completed", "cancelled"]
+        if status_filter not in allowed_status:
+            status_filter = "confirmed"
+
+        allowed_sort_fields = ["booking_date", "price", "payment_date"]
+        if sort_by not in allowed_sort_fields:
+            sort_by = "booking_date"
+
+        # ---------------- BASE PIPELINE ---------------- #
+        base_pipeline = [
+
+            # ✅ MATCH PROVIDER BOOKINGS
+            {
+                "$match": {
+                    "provider_id": provider_id,
+                    "booking_status": status_filter
+                }
+            },
+
+            # ✅ CONVERT USER_ID TO OBJECT ID
+            {
+                "$addFields": {
+                    "user_id_obj": {
+                        "$cond": [
+                            {"$and": [
+                                {"$ne": ["$user_id", None]},
+                                {"$ne": ["$user_id", ""]}
+                            ]},
+                            {"$toObjectId": "$user_id"},
+                            None
+                        ]
+                    },
+                    "service_id_obj": {
+                        "$cond": [
+                            {"$and": [
+                                {"$ne": ["$service_id", None]},
+                                {"$ne": ["$service_id", ""]}
+                            ]},
+                            {"$toObjectId": "$service_id"},
+                            None
+                        ]
+                    }
+                }
+            },
+
+            # ---------------- USER LOOKUP ---------------- #
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "user_id_obj",
+                    "foreignField": "_id",
+                    "as": "user"
+                }
+            },
+            {
+                "$unwind": {
+                    "path": "$user",
+                    "preserveNullAndEmptyArrays": True
+                }
+            },
+
+            # ---------------- SERVICE LOOKUP ---------------- #
+            {
+                "$lookup": {
+                    "from": "service_category",
+                    "localField": "service_id_obj",
+                    "foreignField": "_id",
+                    "as": "service"
+                }
+            },
+            {
+                "$unwind": {
+                    "path": "$service",
+                    "preserveNullAndEmptyArrays": True
+                }
+            }
+        ]
+
+        # ---------------- SEARCH ---------------- #
+        if search:
+            base_pipeline.append({
+                "$match": {
+                    "$or": [
+                        {"user.name": {"$regex": search, "$options": "i"}},
+                        {"user.email": {"$regex": search, "$options": "i"}},
+                        {"service.service_name": {"$regex": search, "$options": "i"}}
+                    ]
+                }
+            })
+
+        # ---------------- DATA PIPELINE ---------------- #
+        data_pipeline = base_pipeline + [
+            {"$sort": {sort_by: sort_direction}},
+            {"$skip": skip},
+            {"$limit": limit}
+        ]
+
+        bookings = list(booking_collection.aggregate(data_pipeline))
+
+        # ---------------- COUNT PIPELINE ---------------- #
+        count_pipeline = base_pipeline + [
+            {"$count": "total"}
+        ]
+
+        total_result = list(booking_collection.aggregate(count_pipeline))
+        total_bookings = total_result[0]["total"] if total_result else 0
+
+        # ---------------- FORMAT RESPONSE ---------------- #
+        booking_data = []
+
+        for b in bookings:
+            booking_data.append({
+                "booking_id": str(b["_id"]),
+
+                # USER DETAILS (IMPORTANT)
+                "user_name": b.get("user", {}).get("name"),
+                "user_email": b.get("user", {}).get("email"),
+                "user_phone": b.get("user", {}).get("phone"),
+                "user_location": b.get("user", {}).get("location"),
+
+                # SERVICE DETAILS
+                "service_name": b.get("service", {}).get("service_name"),
+
+                # BOOKING DETAILS
+                "price": b.get("price"),
+                "booking_status": b.get("booking_status"),
+                "payment_status": b.get("payment_status"),
+                "payment_date": b.get("payment_date"),
+                "booking_date": b.get("booking_date")
+            })
+
+        total_pages = (total_bookings + limit - 1) // limit
+
+        return response.success_response(
+            status=200,
+            message="Provider bookings fetched successfully",
             data=jsonable_encoder({
                 "bookings": booking_data,
                 "pagination": {

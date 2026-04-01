@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request,Depends
 from core import http_status
 from core import response 
 from core.dependency import get_current_user
-from controllers.booking_controller import create_booking,verify_payment,fetch_booking
+from controllers.booking_controller import create_booking,verify_payment,fetch_booking,fetch_provider_booking
 
 
 router = APIRouter()
@@ -43,3 +43,11 @@ async def Verify_Order(request:Request, current_user: dict = Depends(get_current
 @router.get('/fetch/current_user',response_description="fetch current user booking")
 async def fetch_booking_endpoint(request:Request,current_user: dict = Depends(get_current_user)):
     return await fetch_booking(request,current_user)
+
+
+# URL:http://127.0.0.1:8000/api/v1/booking/fetch/provider
+# METHOD:GET
+# description: fetch current user booking
+@router.get('/fetch/provider',response_description="Get Provider Booking")
+async def fetch_provider_booking_endpoint(request:Request,current_user: dict = Depends(get_current_user)):
+    return await fetch_provider_booking(request,current_user)
