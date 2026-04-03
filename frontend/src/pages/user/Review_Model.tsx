@@ -1,6 +1,7 @@
 import { useState ,useEffect} from "react";
 import { getAuthHeader } from "../../utils/authHelper";
 import { type Booking } from "./Booking_History";
+import { fetchWithAuth } from "../../utils/fetch_auth";
 
 export function ReviewModal({
   booking,
@@ -46,7 +47,7 @@ export function ReviewModal({
         comment: comment.trim(),
       };
 
-      const res = await fetch("http://127.0.0.1:8000/api/v1/reviews/create", {
+      const res = await fetchWithAuth("http://127.0.0.1:8000/api/v1/reviews/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

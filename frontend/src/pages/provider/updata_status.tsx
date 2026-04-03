@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { BOOKING_ENDPOINTS } from "../../config/booking";
 import { getAuthHeader } from "../../utils/authHelper";
+import { fetchWithAuth } from "../../utils/fetch_auth";
 
 interface Booking {
   booking_id: string;
@@ -21,7 +22,7 @@ const ProviderBookings: React.FC = () => {
   // ✅ Fetch Provider Bookings
   const fetchBookings = async () => {
     try {
-      const res = await fetch(
+      const res = await fetchWithAuth(
         `${BOOKING_ENDPOINTS.fetch_booking_provider}?status=confirmed`,
         {
           method: "GET",
@@ -49,7 +50,7 @@ const ProviderBookings: React.FC = () => {
         bookingId
       );
 
-      const res = await fetch(url, {
+      const res = await fetchWithAuth(url, {
         method: "PUT",
         headers: getAuthHeader(),
       });

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { FaMapMarkerAlt, FaPhone, FaEnvelope, FaStar } from "react-icons/fa";
 import { PROVIDER_ENDPOINTS } from "../../config/provider";
 import { useSearchParams } from "react-router-dom";
+import { fetchWithAuth } from "../../utils/fetch_auth";
 
 
 declare global {
@@ -62,7 +63,7 @@ export function ProviderListing() {
     try {
       setLoadingReviews(true);
 
-      const res = await fetch(
+      const res = await fetchWithAuth(
         `http://127.0.0.1:8000/api/v1/reviews/fetch/provider/${providerId}`
       );
 

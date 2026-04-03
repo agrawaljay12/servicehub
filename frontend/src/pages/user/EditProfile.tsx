@@ -3,6 +3,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { USER_ENDPOINTS } from "../../config/api";
 import { getCurrentUser } from "../../utils/authHelper";
 import { useNavigate } from "react-router-dom";
+import { fetchWithAuth } from "../../utils/fetch_auth";
 
 export function EditProfile() {
   const { theme } = useTheme();
@@ -46,7 +47,7 @@ export function EditProfile() {
           userId
         );
 
-        const res = await fetch(url);
+        const res = await fetchWithAuth(url);
         const data = await res.json();
 
         if (!res.ok) {
@@ -114,7 +115,7 @@ export function EditProfile() {
         formData.append("file", profileFile);
       }
 
-      const res = await fetch(url, {
+      const res = await fetchWithAuth(url, {
         method: "PUT",
         body: formData
       });

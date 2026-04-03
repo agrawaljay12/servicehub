@@ -3,6 +3,7 @@ import { BOOKING_ENDPOINTS } from "../../config/booking";
 import { getAuthHeader } from "../../utils/authHelper";
 import { FaCalendarAlt, FaUser, FaRupeeSign } from "react-icons/fa";
 import { ReviewModal } from "./Review_Model";
+import { fetchWithAuth } from "../../utils/fetch_auth";
 
 export interface Booking {
   booking_id: string;
@@ -62,7 +63,7 @@ export function BookingHistory() {
           query.append("search", debouncedSearch);
         }
 
-        const res = await fetch(
+        const res = await fetchWithAuth(
           `${BOOKING_ENDPOINTS.current_user_bookings}?${query}`,
           {
             headers: getAuthHeader(),

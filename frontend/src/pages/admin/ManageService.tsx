@@ -4,6 +4,7 @@ import { FaPlus, FaEdit, FaTrash, FaSpinner, FaTimes } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
 import { CATEGORY_ENDPOINTS } from "../../config/category";
 import { getAuthHeader } from "../../utils/authHelper";
+import { fetchWithAuth } from "../../utils/fetch_auth";
 
 interface Service {
   _id: string;
@@ -54,7 +55,7 @@ export function ManageService() {
       setLoading(true);
       setError('');
 
-      const response = await fetch(CATEGORY_ENDPOINTS.fetchAll, {
+      const response = await fetchWithAuth(CATEGORY_ENDPOINTS.fetchAll, {
         method: 'GET',
         headers: getAuthHeader()
       });
@@ -142,7 +143,7 @@ export function ManageService() {
     try {
       if (isEditing && selectedService) {
         // Update service
-        const response = await fetch(`${CATEGORY_ENDPOINTS.update}/${selectedService._id}`, {
+        const response = await fetchWithAuth(`${CATEGORY_ENDPOINTS.update}/${selectedService._id}`, {
           method: 'PUT',
           headers: {
             ...getAuthHeader(),

@@ -4,6 +4,7 @@ import { FaSpinner, FaTimes, FaArrowRight, FaStar } from "react-icons/fa";
 import { useTheme } from "../../context/ThemeContext";
 import { CATEGORY_ENDPOINTS } from "../../config/category";
 import { getAuthHeader } from "../../utils/authHelper";
+import { fetchWithAuth } from "../../utils/fetch_auth";
 
 interface Service {
   _id: string;
@@ -55,7 +56,7 @@ export function ServiceListing() {
       setLoading(true);
       setError('');
       
-      const response = await fetch(CATEGORY_ENDPOINTS.fetchAll, {
+      const response = await fetchWithAuth(CATEGORY_ENDPOINTS.fetchAll, {
         method: 'GET',
         headers: getAuthHeader()
       });

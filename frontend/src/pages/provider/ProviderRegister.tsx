@@ -11,6 +11,7 @@ import {
   PROVIDER_SUCCESS 
 } from "../../config/provider";
 import { CATEGORY_ENDPOINTS } from "../../config/category";
+import { fetchWithAuth } from "../../utils/fetch_auth";
 
 interface Category {
   _id: string;
@@ -50,7 +51,7 @@ export function ProviderRegister() {
 
   // Check if user is authenticated and fetch user details
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
+    const token = sessionStorage.getItem('access_token');
     const userStr = localStorage.getItem('user');
     
     if (!token) {
@@ -85,7 +86,7 @@ export function ProviderRegister() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch(CATEGORY_ENDPOINTS.fetchAll);
+        const response = await fetchWithAuth(CATEGORY_ENDPOINTS.fetchAll);
         const data = await response.json();
         if (response.ok && data.data) {
           setCategories(data.data);
@@ -200,7 +201,7 @@ export function ProviderRegister() {
         hasFile: !!file
       });
 
-      const response = await fetch(PROVIDER_ENDPOINTS.create, {
+      const response = await fetchWithAuth(PROVIDER_ENDPOINTS.create, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

@@ -3,6 +3,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { USER_ENDPOINTS } from "../../config/api";
 import { getCurrentUser } from "../../utils/authHelper";
 import { useNavigate } from "react-router-dom";
+import { fetchWithAuth } from "../../utils/fetch_auth";
 
 export function AdminViewProfile() {
   const { theme } = useTheme();
@@ -29,7 +30,7 @@ export function AdminViewProfile() {
           userId
         );
 
-        const response = await fetch(url);
+        const response = await fetchWithAuth(url);
         const data = await response.json();
 
         if (!response.ok) {

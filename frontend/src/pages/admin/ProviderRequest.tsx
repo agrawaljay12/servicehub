@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import { getAuthHeader } from "../../utils/authHelper";
+import { fetchWithAuth } from "../../utils/fetch_auth";
 
 const API_BASE = "http://127.0.0.1:8000/api/v1/provider";
 
@@ -13,7 +14,7 @@ export function ProviderRequest() {
   // ✅ FETCH PENDING PROVIDERS
   const fetchProviders = async () => {
     try {
-      const res = await fetch(`${API_BASE}/fetch_all/pending`, {
+      const res = await fetchWithAuth(`${API_BASE}/fetch_all/pending`, {
         method: "GET",
         headers: getAuthHeader()
       });
@@ -33,7 +34,7 @@ export function ProviderRequest() {
   // ✅ APPROVE / REJECT
   const handleAction = async (id: string, status: "approved" | "rejected") => {
     try {
-      const res = await fetch(
+      const res = await fetchWithAuth(
         `${API_BASE}/verify/${id}?status=${status}`,
         {
           method: "PUT",

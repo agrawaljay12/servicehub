@@ -3,6 +3,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { USER_ENDPOINTS } from "../../config/api";
 import { getCurrentUser } from "../../utils/authHelper";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { fetchWithAuth } from "../../utils/fetch_auth";
 
 export function ProviderChangePassword() {
   const { theme } = useTheme();
@@ -56,7 +57,7 @@ export function ProviderChangePassword() {
         userId
       );
 
-      const response = await fetch(url, {
+      const response = await fetchWithAuth(url, {
         method: "PUT", // ✅ match backend
         headers: {
           "Content-Type": "application/json"

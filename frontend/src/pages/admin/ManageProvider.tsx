@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { USER_ENDPOINTS } from "../../config/api";
 import { useTheme } from "../../context/ThemeContext";
 import { getAuthHeaderForFormData } from "../../utils/authHelper";
+import { fetchWithAuth } from "../../utils/fetch_auth";
 
 export function ManageProvider() {
   const { theme } = useTheme();
@@ -23,7 +24,7 @@ export function ManageProvider() {
 
       const url = `${USER_ENDPOINTS.fetch_all_provider}?page=${page}&limit=${limit}&sort_by=name&sort_order=${sortOrder}`;
 
-      const res = await fetch(url, {
+      const res = await fetchWithAuth(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -56,7 +57,7 @@ export function ManageProvider() {
     try {
       const url = USER_ENDPOINTS.delete_user_by_id.replace("{user_id}", userId);
 
-      const res = await fetch(url, {
+      const res = await fetchWithAuth(url, {
         method: "DELETE",
         headers: {
           ...getAuthHeaderForFormData()
