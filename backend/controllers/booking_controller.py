@@ -466,7 +466,7 @@ async def fetch_provider_booking(
         sort_by = params.get("sort_by", "booking_date")
         sort_order = int(params.get("sort_order", 1))
         page = int(params.get("page", 1))
-        limit = int(params.get("limit", 12))
+        limit = int(params.get("limit", 9))
         status_filter = params.get("status", "confirmed")
 
         user_id = str(current_user.get("user_id"))
@@ -646,7 +646,12 @@ async def fetch_provider_booking(
 #  update status booking 
 async def update_booking_status(booking_id: str,  current_user: dict = Depends(get_current_user)):
     try:
-        user_id  = str(current_user.get("user_id"))
+
+        user_id  = current_user.get("user_id")
+
+        user_id = str(user_id)
+
+        print("User ID from token:", user_id)  # Debugging line
 
         if not user_id:
             raise HTTPException(status_code=http_status.UNAUTHORIZED, detail="Unauthorized")

@@ -3,7 +3,7 @@ import re
 from config.db import db
 from models.users import User
 from fastapi import HTTPException, Request, File,UploadFile,Form
-from core.core import hash_password,verify_password,create_access_token
+from core.core import create_refresh_token, hash_password,verify_password,create_access_token
 from utility.file_upload import save_file
 from core import message
 from core import http_status
@@ -12,6 +12,11 @@ from core import validation
 from datetime import datetime
 from bson import ObjectId
 from pymongo import ASCENDING, DESCENDING
+from datetime import datetime, timedelta
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Load environment variables from .env file
 
 # define user collections
 user_collection = db["users"]
@@ -133,6 +138,7 @@ async def login_user(request:Request):
                 detail=message.INVALID_PASSWORD
             )
         
+        
         token_data = {
             "user_id": str(user["_id"]),
             "email": user["email"],
@@ -140,13 +146,19 @@ async def login_user(request:Request):
             "role": user.get("role","user")
         }
 
+        # generate the jwt token for authentication and authorization
         access_token = create_access_token(token_data)
+
+        # refresh token
+
+        refresh_token = create_refresh_token(token_data)        
 
         # if user is found and password is correct and hashed then return user data  
         return response.success_response(
             message.LOGIN_SUCCESS,
             data={
                 "access_token": access_token,
+                "refresh_token": refresh_token,
                 "token_type": "bearer",
                 "user": token_data
             }

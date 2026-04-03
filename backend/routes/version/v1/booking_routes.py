@@ -58,4 +58,4 @@ async def fetch_provider_booking_endpoint(request:Request,current_user: dict = D
 # description: update booking status of particular booking
 @router.put('/update/status/{booking_id}',response_description="Update Booking Status")
 async def update_booking_status_endpoint(booking_id: str,current_user: dict = Depends(get_current_user)):
-    return await update_booking_status(current_user, booking_id)
+    return await update_booking_status(booking_id,current_user)

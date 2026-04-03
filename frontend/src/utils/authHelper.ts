@@ -98,3 +98,32 @@ export const clearAuthData = () => {
 export const refreshSession = () => {
   localStorage.setItem('sessionStart', new Date().getTime().toString());
 };
+
+// Function to refresh access token using refresh token
+export const refreshAccessToken = async () => {
+  try {
+    const refresh_token = localStorage.getItem("refresh_token");
+
+    const res = await fetch("/refresh-token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refresh_token }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Refresh failed");
+    }
+
+    const data = await res.json();
+
+    localStorage.setItem("access_token", data.access_token);
+
+    return data.access_token;
+  } catch (error) {
+    // logout if refresh fails
+    localStorage.clear();
+    window.location.href = "/auth/signin";
+  }
+};

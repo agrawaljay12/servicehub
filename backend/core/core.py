@@ -13,6 +13,7 @@ load_dotenv()  # Load environment variables from .env file
 jwt_secret_key = os.getenv("JWT_SECRET_KEY")
 jwt_algorithm = os.getenv("JWT_ALGORITHM")
 access_token_expire_minutes = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
+refresh_access_token_expire_days = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS"))
 
 # create a CryptContext object for hashing passwords
 pwd_context = CryptContext(schemes=["argon2"],deprecated="auto")
@@ -38,10 +39,10 @@ def create_access_token(data:dict):  #
     to_encode = data.copy()
 
     # Set the expiration time for the token
-    expire = datetime.now(timezone.utc) + timedelta(minutes=access_token_expire_minutes)
+    access_expire = datetime.now(timezone.utc) + timedelta(minutes=access_token_expire_minutes)
 
     # # Add the expiration timestamp to the token payload
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": access_expire,"type":"access"})
 
     # Encode the token with the secret key and algorithm
     encoded_jwt = jwt.encode(to_encode, jwt_secret_key, algorithm=jwt_algorithm)
@@ -49,36 +50,55 @@ def create_access_token(data:dict):  #
     # Return the encoded JWT token
     return encoded_jwt
 
-# Verify and decode JWT token
-def verify_token(token: str) -> dict:
-    """
-    Decode and verify JWT token validity
-    Args:
-        token: JWT token string from request header
-    Returns:
-        Decoded token payload containing user information
-    Raises:
-        JWTError: If token is invalid or expired
-    """
-    try:
-        payload = jwt.decode(token, jwt_secret_key, algorithms=[jwt_algorithm])
-        return payload
-    except JWTError as e:
-        raise JWTError(f"Token validation failed: {str(e)}")
+# # Verify and decode JWT token
+# def verify_token(token: str) -> dict:
+#     """
+#     Decode and verify JWT token validity
+#     Args:
+#         token: JWT token string from request header
+#     Returns:
+#         Decoded token payload containing user information
+#     Raises:
+#         JWTError: If token is invalid or expired
+#     """
+#     try:
+#         payload = jwt.decode(token, jwt_secret_key, algorithms=[jwt_algorithm])
+#         return payload
+#     except JWTError as e:
+#         raise JWTError(f"Token validation failed: {str(e)}")
 
 
-    # refresh token function for generating new jwt token before expiration
-def refresh_access_token(token: str) -> str:
-    try:
-        # Decode the existing token to get its payload
-        payload = jwt.decode(token, jwt_secret_key, algorithms=[jwt_algorithm])
+#     # refresh token function for generating new jwt token before expiration
+# def refresh_access_token(token: str) -> str:
+#     try:
+#         # Decode the existing token to get its payload
+#         payload = jwt.decode(token, jwt_secret_key, algorithms=[jwt_algorithm],options={"verify_exp":False})
 
-        # Remove the expiration field to create a new token
-        payload.pop("exp", None)
+#         # Remove the expiration field to create a new token
+#         payload.pop("exp", None)
 
-        # Create a new access token with updated expiration
-        new_token = create_access_token(payload)
+#         # Create a new access token with updated expiration
+#         new_token = create_access_token(payload)
 
-        return new_token
-    except JWTError as e:
-        raise JWTError(f"Token refresh failed: {str(e)}")
+#         return new_token
+#     except JWTError as e:
+#         raise JWTError(f"Token refresh failed: {str(e)}")
+
+#  refresh access token function for new generate jwt token creation
+def create_refresh_token(data:dict):  #
+
+    # Create a copy of the input data to avoid modifying the original dictionary
+    to_encode = data.copy()
+
+    # Set the expiration time for the token
+    access_expire = datetime.now(timezone.utc) + timedelta(days=refresh_access_token_expire_days)
+
+    # # Add the expiration timestamp to the token payload
+    to_encode.update({"exp": access_expire,"type":"refresh"})
+
+    # Encode the token with the secret key and algorithm
+    encoded_jwt = jwt.encode(to_encode, jwt_secret_key, algorithm=jwt_algorithm)
+
+    # Return the encoded JWT token
+    return encoded_jwt
+

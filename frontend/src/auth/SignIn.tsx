@@ -4,7 +4,7 @@ import { FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useTheme } from "../context/ThemeContext";
 import { USER_ENDPOINTS, VALIDATION } from "../config/api";
 
-const SESSION_TIMEOUT = 120 * 60 * 1000; // 30 minutes
+const SESSION_TIMEOUT = 120 * 60 * 1000; // 2 hours
 
 export function SignIn() {
   const { theme } = useTheme();
@@ -65,10 +65,11 @@ export function SignIn() {
 
       // Success - Store token and user data with session info
       if (data.data) {
-        const { access_token, user } = data.data;
+        const { access_token, refresh_token, user } = data.data;
         
         // Store token
-        localStorage.setItem('access_token', access_token);
+        sessionStorage.setItem('access_token', access_token);
+        sessionStorage.setItem('refresh_token', refresh_token);
         
         // Store user info
         localStorage.setItem('user', JSON.stringify(user));
