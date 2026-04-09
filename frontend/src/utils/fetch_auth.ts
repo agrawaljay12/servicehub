@@ -2,7 +2,7 @@ import { refreshAccessToken } from "./authHelper";
 
 
 export const fetchWithAuth = async (url: string, options: any = {}) => {
-  let token = localStorage.getItem("access_token");
+  let token = sessionStorage.getItem("access_token");
 
   const makeRequest = async (accessToken: string | null) => {
     return fetch(url, {
