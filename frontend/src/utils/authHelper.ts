@@ -8,7 +8,7 @@
  * @returns Object with Authorization and Content-Type headers
  */
 export const getAuthHeader = (): Record<string, string> => {
-  const token = sessionStorage.getItem('access_token');
+  const token = localStorage.getItem('access_token');
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
   };
@@ -26,13 +26,13 @@ export const getAuthHeader = (): Record<string, string> => {
  * @returns Object with only Authorization header
  */
 export const getAuthHeaderForFormData = (): Record<string, string> => {
-  const token = sessionStorage.getItem('access_token');
+  const token = localStorage.getItem('access_token');
   const headers: Record<string, string> = {};
   
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   return headers;
 };
 
@@ -41,7 +41,7 @@ export const getAuthHeaderForFormData = (): Record<string, string> => {
  * @returns true if user has valid token and session
  */
 export const isAuthenticated = (): boolean => {
-  const token = sessionStorage.getItem('access_token');
+  const token = localStorage.getItem('access_token');
   const user = localStorage.getItem('user');
   return !!(token && user);
 };
@@ -67,8 +67,8 @@ export const getCurrentUser = () => {
  * @returns true if session has timed out
  */
 export const isSessionExpired = (): boolean => {
-  const sessionStart = sessionStorage.getItem('sessionStart');
-  const sessionTimeout = sessionStorage.getItem('sessionTimeout');
+  const sessionStart = localStorage.getItem('sessionStart');
+  const sessionTimeout = localStorage.getItem('sessionTimeout');
   
   if (!sessionStart || !sessionTimeout) {
     return false;
