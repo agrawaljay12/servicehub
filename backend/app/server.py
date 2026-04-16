@@ -11,18 +11,18 @@ def create_server() -> FastAPI:
         version="1.0.0"
     )
 
-    origin =[
-            "http://localhost:5173",      # Frontend dev server
-            "http://127.0.0.1:5173",      # Alternative localhost
-            "http://localhost:3000",      # Alternative port
-            "http://127.0.0.1:3000",      # Alternative localhost:3000
-            "https://servicehub-blush.vercel.app"
-        ]
+    # origin =[
+    #         "http://localhost:5173",      # Frontend dev server
+    #         "http://127.0.0.1:5173",      # Alternative localhost
+    #         "http://localhost:3000",      # Alternative port
+    #         "http://127.0.0.1:3000",      # Alternative localhost:3000
+    #         "https://servicehub-blush.vercel.app"
+    #     ]
     
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=origin,
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],              # Allow all HTTP methods
         allow_headers=["*"],              # Allow all headers
