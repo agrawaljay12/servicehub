@@ -21,7 +21,7 @@ async def booking_home():
     )
 
 
-# URL:http://127.0.0.1:8000/api/v1/booking/create
+# URL:https://servicehub-i8ef.onrender.com/api/v1/booking/create
 # METHOD:POST
 # description: create booking 
 @router.post('/create',response_description="Create Booking")
@@ -30,14 +30,14 @@ async def Create_Order(request:Request,current_user: dict = Depends(get_current_
 
 
 
-# URL:http://127.0.0.1:8000/api/v1/booking/verify
+# URL:https://servicehub-i8ef.onrender.com/api/v1/booking/verify
 # METHOD:POST
 # description: create booking 
 @router.post('/verify',response_description="Verify Booking")
 async def Verify_Order(request:Request, current_user: dict = Depends(get_current_user)):
     return await verify_payment(request,current_user)
 
-# URL:http://127.0.0.1:8000/api/v1/booking/fetch/current_user
+# URL:https://servicehub-i8ef.onrender.com/api/v1/booking/fetch/current_user
 # METHOD:GET
 # description: fetch current user booking
 @router.get('/fetch/current_user',response_description="fetch current user booking")
@@ -45,7 +45,7 @@ async def fetch_booking_endpoint(request:Request,current_user: dict = Depends(ge
     return await fetch_booking(request,current_user)
 
 
-# URL:http://127.0.0.1:8000/api/v1/booking/fetch/provider
+# URL:https://servicehub-i8ef.onrender.com/api/v1/booking/fetch/provider
 # METHOD:GET
 # description: fetch current user booking
 @router.get('/fetch/provider',response_description="Get Provider Booking")
@@ -53,7 +53,7 @@ async def fetch_provider_booking_endpoint(request:Request,current_user: dict = D
     return await fetch_provider_booking(request,current_user)
 
 
-# URL:http://127.0.0.1:8000/api/v1/booking/update/status/{booking_id}
+# URL:https://servicehub-i8ef.onrender.com/api/v1/booking/update/status/{booking_id}
 # METHOD:PUT
 # description: update booking status of particular booking
 @router.put('/update/status/{booking_id}',response_description="Update Booking Status")

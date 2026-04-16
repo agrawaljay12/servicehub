@@ -17,7 +17,7 @@ async def home():
 
     )
 
-# url: http://127.0.0.1:8000/api/v1/services/create
+# url: https://servicehub-i8ef.onrender.com/api/v1/services/create
 # method: POST
 # description : create a new service category
 
@@ -26,7 +26,7 @@ async def create_service_category_endpoint(request:Request):
     return await create_service_category(request)
 
 
-# url: http://127.0.0.1:8000/api/v1/services/fetch_all
+# url: https://servicehub-i8ef.onrender.com/api/v1/services/fetch_all
 # method: GET
 # description : fetch all service categories
 
@@ -35,7 +35,7 @@ async def get_service_categories_endpoint():
     return await get_service_categories()
 
 
-# url: http://127.0.0.1:8000/api/v1/services/fetch/{service_id}
+# url: https://servicehub-i8ef.onrender.com/api/v1/services/fetch/{service_id}
 # method: GET
 # description : fetch  service categories by service category
 

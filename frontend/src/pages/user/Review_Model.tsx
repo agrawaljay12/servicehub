@@ -47,7 +47,7 @@ export function ReviewModal({
         comment: comment.trim(),
       };
 
-      const res = await fetchWithAuth("http://127.0.0.1:8000/api/v1/reviews/create", {
+      const res = await fetchWithAuth("https://servicehub-i8ef.onrender.com/api/v1/reviews/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -18,7 +18,7 @@ async def home():
 
     )
 
-# url: http://127.0.0.1:8000/api/v1/otp/generate    
+# url: https://servicehub-i8ef.onrender.com/api/v1/otp/generate    
 # method: POST
 # description : WELCOME TO API HOME 
 
@@ -27,7 +27,7 @@ async def generate_otp_route(request:Request):
     return await generate_otp(request)
 
 
-# url: http://127.0.0.1:8000/api/v1/otp/verify
+# url: https://servicehub-i8ef.onrender.com/api/v1/otp/verify
 # method: POST
 # description : WELCOME TO API HOME 
 @router.post('/verify',response_description="OTP Verifyed successfully")

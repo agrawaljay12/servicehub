@@ -17,7 +17,7 @@ async def home():
 
     )
 
-# URL: http://127.0.0.1:8000/api/v1/provider/create
+# URL: https://servicehub-i8ef.onrender.com/api/v1/provider/create
 # method: POST
 # description : CREATE A NEW PROVIDER
 
@@ -41,7 +41,7 @@ async def create_provider_endpoint(
         current_user=current_user
     )
 
-# URL: http://127.0.0.1:8000/api/v1/provider/fetch_all/approved
+# URL: https://servicehub-i8ef.onrender.com/api/v1/provider/fetch_all/approved
 # method: GET
 # description : fetch all providers based on status =="approved"
 
@@ -49,7 +49,7 @@ async def create_provider_endpoint(
 async def fetch_all_providers_endpoint(request:Request):
     return await get_all_approved_Provider(request)
 
-# URL: http://127.0.0.1:8000/api/v1/provider/fetch_all/pending
+# URL: https://servicehub-i8ef.onrender.com/api/v1/provider/fetch_all/pending
 # method: GET
 # description : fetch all providers based on status =="pending"
 
@@ -58,7 +58,7 @@ async def fetch_all_providers_endpoint():
     return await get_all_pending_Provider()
 
 
-# URL: http://127.0.0.1:8000/api/v1/provider/verify/{provider_id}
+# URL: https://servicehub-i8ef.onrender.com/api/v1/provider/verify/{provider_id}
 # method:PUT
 # description: Approved and Rejected the request of Provider and update the role  
 @router.put('/verify/{provider_id}',response_description="Approved and Rejected Request of Provider",dependencies=[Depends(get_required_role(["admin"]))])

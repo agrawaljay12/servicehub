@@ -64,7 +64,7 @@ export function ProviderListing() {
       setLoadingReviews(true);
 
       const res = await fetchWithAuth(
-        `http://127.0.0.1:8000/api/v1/reviews/fetch/provider/${providerId}`
+        `https://servicehub-i8ef.onrender.com/api/v1/reviews/fetch/provider/${providerId}`
       );
 
       const data = await res.json();
@@ -165,7 +165,7 @@ export function ProviderListing() {
     const token = sessionStorage.getItem("access_token");
 
     // 1️⃣ Create Booking (SEND provider_id ✅)
-    const res = await fetchWithAuth("http://127.0.0.1:8000/api/v1/booking/create", {
+    const res = await fetchWithAuth("https://servicehub-i8ef.onrender.com/api/v1/booking/create", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -209,7 +209,7 @@ export function ProviderListing() {
             setPaymentStatus("verifying");
 
             const verifyRes = await fetchWithAuth(
-              "http://127.0.0.1:8000/api/v1/booking/verify",
+              "https://servicehub-i8ef.onrender.com/api/v1/booking/verify",
               {
                   method: "POST",
                   headers: {

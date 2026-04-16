@@ -20,7 +20,7 @@ async def booking_home():
     )
 
 
-# URL:http://127.0.0.1:8000/api/v1/reviews/create
+# URL:https://servicehub-i8ef.onrender.com/api/v1/reviews/create
 # METHOD:POST   
 # description: create review for completed booking only and also update provider average rating
 
@@ -29,7 +29,7 @@ async def Create_Review(request:Request,current_user: dict = Depends(get_current
     return await create_review(request,current_user)
 
 
-# URL:http://127.0.0.1:8000/api/v1/reviews/fetch/provider/{provider_id}
+# URL:https://servicehub-i8ef.onrender.com/api/v1/reviews/fetch/provider/{provider_id}
 # METHOD:GET 
 # description: get all reviews for a provider by provider id
 

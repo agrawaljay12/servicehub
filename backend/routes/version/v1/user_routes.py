@@ -17,7 +17,7 @@ async def home():
 
     )
 
-# URL:http://127.0.0.1:8000/api/v1/users/create
+# URL:https://servicehub-i8ef.onrender.com/api/v1/users/create
 # method : POST
 # description : create a new user
 
@@ -40,7 +40,7 @@ async def add_user(
         )
 
 
-# URL: http://127.0.0.1:8000/api/v1/users/login
+# URL: https://servicehub-i8ef.onrender.com/api/v1/users/login
 # method : POST
 # description : login a user
 
@@ -49,7 +49,7 @@ async def handle_login_user(request:Request):
    return await login_user(request)
 
 
-# URL: http://127.0.0.1:8000/api/v1/users/fetch/all
+# URL: https://servicehub-i8ef.onrender.com/api/v1/users/fetch/all
 # method : GET
 # description : Fetch all Users 
 
@@ -58,7 +58,7 @@ async def get_all_users_route(request:Request):
     return await get_all_users(request)
 
 
-# URL: http://127.0.0.1:8000/api/v1/users/fetch/all/provider
+# URL: https://servicehub-i8ef.onrender.com/api/v1/users/fetch/all/provider
 # method : GET
 # description : Fetch all Provider
 
@@ -67,7 +67,7 @@ async def get_all_provider_route(request:Request):
     return await get_all_provider(request)
 
 
-# URL: http://127.0.0.1:8000/api/v1/users/fetch/{user_id}
+# URL: https://servicehub-i8ef.onrender.com/api/v1/users/fetch/{user_id}
 # method : GET
 # description : Get User By Id
 @router.get("/fetch/{user_id}",response_description="Get User By Id")
@@ -75,7 +75,7 @@ async def get_user_by_id_endpoint(user_id:str):
     return await fetch_user_by_id(user_id)
 
 
-# URL: http://127.0.0.1:8000/api/v1/users/forgot-password
+# URL: https://servicehub-i8ef.onrender.com/api/v1/users/forgot-password
 # method :put
 # description : forgot password for user
 @router.put("/forgot-password",response_description="Forgot password for user")
@@ -83,7 +83,7 @@ async def forgot_password_endpoint(request:Request):
     return await forgot_password(request)
 
 
-# URL: http://127.0.0.1:8000/api/v1/users/edit/{user_id}
+# URL: https://servicehub-i8ef.onrender.com/api/v1/users/edit/{user_id}
 # method :put
 # description : Update User By Id
 
@@ -106,7 +106,7 @@ async def edit_user_by_id_endpoint(
     )
 
 
-# URL: http://127.0.0.1:8000/api/v1/users/change_password/{user_id}
+# URL: https://servicehub-i8ef.onrender.com/api/v1/users/change_password/{user_id}
 # method :put
 # description : Change Password By Id
 
@@ -115,7 +115,7 @@ async def change_password_endpoint(user_id:str,request:Request):
     return await change_password(user_id,request)
 
 
-# URL: http://127.0.0.1:8000/api/v1/users/delete/{user_id}
+# URL: https://servicehub-i8ef.onrender.com/api/v1/users/delete/{user_id}
 # method :DELETE
 # description : Delete User By Id
 
