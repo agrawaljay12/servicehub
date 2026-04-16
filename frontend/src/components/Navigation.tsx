@@ -13,7 +13,7 @@ export function Navigation() {
 
   const navLinks = [
     { name: "Home", path: "/", icon: FaHome },
-    { name: "Services", path: "guest/services", icon: FaServicestack },
+    { name: "Services", path: "/guest/services", icon: FaServicestack },
     { name: "Contact", path: "/guest/contact", icon: FaPhone },
     { name: "About", path: "/guest/about", icon: FaUser },
   ];
