@@ -214,10 +214,6 @@ export function ProviderListing() {
               "https://servicehub-i8ef.onrender.com/api/v1/booking/verify",
               {
                   method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                  },
                   body: JSON.stringify({
                   ...response,
                   provider_id: provider._id, 
