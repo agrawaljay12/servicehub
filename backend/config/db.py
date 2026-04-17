@@ -1,6 +1,9 @@
 from pymongo import MongoClient
+import os
 
-client = MongoClient('mongodb+srv://agrawaljay247_db_user:jay%26%4012345@cluster0.bdgppsl.mongodb.net/?appName=Cluster0')
+MONGO_URI = os.getenv("MONGO_URI")
+
+client = MongoClient(MONGO_URI)
 
 db = client['smart_local_services']
 
