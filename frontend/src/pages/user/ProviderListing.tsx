@@ -229,6 +229,7 @@ export function ProviderListing() {
 
             if (verifyData?.data?.status === "success") {
               setPaymentStatus("success");
+              alert("✅ Payment successful! Your booking is confirmed.");
             } else {
               setPaymentStatus("failed");
             }
