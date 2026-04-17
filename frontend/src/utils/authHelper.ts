@@ -96,34 +96,19 @@ export const clearAuthData = () => {
  * Refresh session timestamp
  */
 export const refreshSession = () => {
-  sessionStorage.setItem('sessionStart', new Date().getTime().toString());
+  localStorage.setItem('sessionStart', new Date().getTime().toString());
 };
 
 // Function to refresh access token using refresh token
 export const refreshAccessToken = async () => {
-  try {
-    const refresh_token = localStorage.getItem("refresh_token");
+  // No refresh API exists → force logout
 
-    const res = await fetch("/refresh-token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ refresh_token }),
-    });
+  console.warn("No refresh token API. Redirecting to login...");
 
-    if (!res.ok) {
-      throw new Error("Refresh failed");
-    }
+  sessionStorage.clear();
+  localStorage.clear();
 
-    const data = await res.json();
+  window.location.href = "/auth/signin";
 
-    sessionStorage.setItem("access_token", data.access_token);
-
-    return data.access_token;
-  } catch (error) {
-    // logout if refresh fails
-    sessionStorage.clear();
-    window.location.href = "/auth/signin";
-  }
+  return null; // important to avoid undefined issues
 };
