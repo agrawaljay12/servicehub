@@ -13,10 +13,7 @@ from datetime import datetime
 from bson import ObjectId
 from pymongo import ASCENDING, DESCENDING
 from datetime import datetime, timedelta
-import os
-from dotenv import load_dotenv
 
-load_dotenv()  # Load environment variables from .env file
 
 # define user collections
 user_collection = db["users"]

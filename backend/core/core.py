@@ -6,7 +6,10 @@ from typing import Optional
 from dotenv import load_dotenv
 import os
 
-load_dotenv()  # Load environment variables from .env file
+if os.getenv("ENVIRONMENT")=="development":
+    load_dotenv('.env.development')
+else:
+    load_dotenv()
 
 # Load environment variables for JWT configuration
 jwt_secret_key = os.getenv("JWT_SECRET_KEY")
