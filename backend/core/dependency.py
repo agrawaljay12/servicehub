@@ -7,7 +7,10 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables for JWT configuration
-load_dotenv()
+if os.getenv("ENVIRONMENT")=="development":
+    load_dotenv('.env.development')
+else:
+    load_dotenv()
 
 oauth2_scheme =  OAuth2PasswordBearer(tokenUrl="/users/login")
 
