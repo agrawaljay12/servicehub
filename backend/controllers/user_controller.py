@@ -410,7 +410,7 @@ async def edit_user_by_id(
 
         # Profile image upload
         if file:
-            profile_url = await save_file(file, "users")  # your existing function
+            profile_url = await save_file(file)  # your existing function
             update_data["profile"] = profile_url
 
         # If nothing to update
