@@ -183,7 +183,7 @@ export function EditProfile() {
                   {preview ? (
                     <img
                       src={
-                          preview?.startsWith("http")
+                          preview?.startsWith("https")
                             ? preview
                             : `https://servicehub-i8ef.onrender.com${preview}`
                         }
