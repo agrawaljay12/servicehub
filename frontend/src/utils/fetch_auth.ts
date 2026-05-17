@@ -1,4 +1,8 @@
-export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+export const fetchWithAuth = async (
+  url: string,
+  options: RequestInit = {}
+) => {
+
   const token = localStorage.getItem("access_token");
 
   if (!token) {
@@ -6,21 +10,29 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
     throw new Error("No token found");
   }
 
+ const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+    ...(options.headers as Record<string, string>),
+  };
+
+  // ✅ Only set JSON content type if NOT FormData
+  if (!(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const response = await fetch(url, {
     ...options,
-    headers: {
-      ...options.headers,
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
+    headers,
   });
 
   if (response.status === 401) {
     localStorage.clear();
     sessionStorage.clear();
+
     window.location.href = "/auth/signin";
+
     throw new Error("Unauthorized");
   }
 
-  return response; // ✅ always returns Response
+  return response;
 };
