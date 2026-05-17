@@ -5,7 +5,7 @@ import cloudinary.uploader
 
 upload_dir: str = "static/uploads"
 
-allowed_type =["image/jpeg","image/jpg","image/png","image/pdf","image/webp"]
+allowed_type =["image/jpeg","image/jpg","image/png","application/pdf","image/webp"]
 
 async def save_file(file:UploadFile):
     try:
@@ -18,7 +18,7 @@ async def save_file(file:UploadFile):
         
         content = await file.read()
         
-        result = cloudinary.uploader(content)
+        result = cloudinary.uploader.upload(content)
 
         return result["secure_url"]
         
@@ -61,7 +61,7 @@ async def save_files(files:List[UploadFile]):
     try:
         # create the empty list to store the paths of the saved files      
         file_paths = []
-        
+
         # save each file and append its path to the list one by one
         for file in files:
             
