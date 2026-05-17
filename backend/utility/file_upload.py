@@ -1,4 +1,5 @@
-from fastapi import HTTPException,status
+from typing import List
+from fastapi import HTTPException,status,UploadFile
 import cloudinary.uploader
 
 
@@ -6,7 +7,7 @@ upload_dir: str = "static/uploads"
 
 allowed_type =["image/jpeg","image/jpg","image/png","image/pdf","image/webp"]
 
-async def save_file(file):
+async def save_file(file:UploadFile):
     try:
 
         if file.content_type not in allowed_type:
@@ -15,7 +16,9 @@ async def save_file(file):
                 detail="Invalid file type, only allowed file type jepg, jpg, png, pdf, webp"
             )
         
-        result = cloudinary.uploader(file)
+        content = await file.read()
+        
+        result = cloudinary.uploader(content)
 
         return result["secure_url"]
         
@@ -53,19 +56,26 @@ async def save_file(file):
 #     return file_location
 
 
-async def save_files(files):
-   
-    # create the empty list to store the paths of the saved files      
-    file_paths = []
+async def save_files(files:List[UploadFile]):
 
-    # save each file and append its path to the list one by one
-    for file in files:
+    try:
+        # create the empty list to store the paths of the saved files      
+        file_paths = []
         
-        # save the file  and get its path, then append the path to the list
-        file_path = await save_file(file)
+        # save each file and append its path to the list one by one
+        for file in files:
+            
+            # save the file  and get its path, then append the path to the list
+            file_path = await save_file(file)
 
-        # append the path of the saved file to the list
-        file_paths.append(file_path)
+            # append the path of the saved file to the list
+            file_paths.append(file_path)
 
-    # after saving all the files, return the list of their paths 
-    return file_paths
+        # after saving all the files, return the list of their paths 
+        return file_paths
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"failed to upload the files on cloudinary:{str(e)}"            
+        )
