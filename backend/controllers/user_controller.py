@@ -12,7 +12,7 @@ from core import validation
 from datetime import datetime
 from bson import ObjectId
 from pymongo import ASCENDING, DESCENDING
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 # define user collections
@@ -65,7 +65,7 @@ async def create_user(
 
         # if file is found then insert then otherwise default 
         if file:
-            profile_picture = await save_file(file,"users")
+            profile_picture = await save_file(file)
         else:
             profile_picture = "http://localhost:8000/static/uploads/users/profile.png"
         
@@ -412,6 +412,8 @@ async def edit_user_by_id(
         if file:
             profile_url = await save_file(file)  # your existing function
             update_data["profile"] = profile_url
+
+        print(file)
 
         # If nothing to update
         if not update_data:
