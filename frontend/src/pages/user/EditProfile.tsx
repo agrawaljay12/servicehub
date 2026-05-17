@@ -117,6 +117,8 @@ export function EditProfile() {
         formData.append("file", profileFile);
       }
 
+      console.log(formData)
+
       const res = await fetchWithAuth(url, {
         method: "PUT",
         body: formData
