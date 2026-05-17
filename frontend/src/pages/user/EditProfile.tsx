@@ -132,15 +132,14 @@ export function EditProfile() {
       }
 
       setSuccess("Profile updated successfully!");
-      
-      const updatedUser = data.data;
 
-      if (updatedUser.profile) {
-        setPreview(updatedUser.profile);
+      // Update preview from backend response
+      if (data?.data?.profile) {
+        setPreview(data.data.profile);
 
         setForm((prev) => ({
           ...prev,
-          profile: updatedUser.profile
+          profile: data.data.profile
         }));
       }
 
@@ -157,6 +156,22 @@ export function EditProfile() {
   if (fetchLoading) {
     return <div className="text-center mt-10">Loading...</div>;
   }
+
+  // profil change
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => 
+  {
+
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    setProfileFile(file);
+
+    // Local preview
+    const objectUrl = URL.createObjectURL(file);
+
+    setPreview(objectUrl);
+  };
 
   return (
     <div
@@ -195,12 +210,14 @@ export function EditProfile() {
                 <div className="w-28 h-28 rounded-full border-2 border-[#0891b2] overflow-hidden flex items-center justify-center">
                   {preview ? (
                     <img
-                      src={preview || ""}
-                      alt="profile"
+                      src={preview}
+                      alt="Profile Preview"
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-sm text-gray-400">Upload</span>
+                    <span className="text-sm text-gray-400">
+                      Upload
+                    </span>
                   )}
                 </div>
 
@@ -208,13 +225,7 @@ export function EditProfile() {
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setProfileFile(file);
-                      setPreview(URL.createObjectURL(file));
-                    }
-                  }}
+                  onChange={handleProfileChange}
                 />
               </label>
             </div>
