@@ -130,6 +130,17 @@ export function EditProfile() {
       }
 
       setSuccess("Profile updated successfully!");
+      
+      const updatedUser = data.data;
+
+      if (updatedUser.profile) {
+        setPreview(updatedUser.profile);
+
+        setForm((prev) => ({
+          ...prev,
+          profile: updatedUser.profile
+        }));
+      }
 
       // ✅ optional: redirect after success
       setTimeout(() => navigate("/user/view-profile"), 1500);
@@ -182,11 +193,8 @@ export function EditProfile() {
                 <div className="w-28 h-28 rounded-full border-2 border-[#0891b2] overflow-hidden flex items-center justify-center">
                   {preview ? (
                     <img
-                      src={
-                          preview?.startsWith("https")
-                            ? preview
-                            : `https://servicehub-i8ef.onrender.com${preview}`
-                        }
+                      src={preview || ""}
+                      alt="profile"
                       className="w-full h-full object-cover"
                     />
                   ) : (
